@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.SVGPath?>
+
+<BorderPane prefHeight="720.0" prefWidth="1200.0" styleClass="screen" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.laundrylink.controller.WelcomeController">
+   <stylesheets>
+      <URL value="@../css/laundrylink.css" />
+   </stylesheets>
+   <top>
+      <VBox>
+         <children>
+            <HBox styleClass="app-header">
+               <children>
+                  <fx:include source="brand-header.fxml" />
+               </children>
+            </HBox>
+            <Region styleClass="header-strip" />
+         </children>
+      </VBox>
+   </top>
+   <center>
+      <VBox alignment="TOP_CENTER" spacing="10.0" styleClass="panel" BorderPane.alignment="CENTER">
+         <BorderPane.margin>
+            <Insets bottom="10.0" left="18.0" right="18.0" top="12.0" />
+         </BorderPane.margin>
+         <children>
+            <Label styleClass="welcome-title" text="Welcome to LaundryLink" />
+            <Label styleClass="brand-subtitle" text="L A U N D R Y    S H O P    M A N A G E M E N T" />
+            <HBox alignment="CENTER" spacing="40.0" VBox.vgrow="ALWAYS">
+               <children>
+                  <ImageView fitHeight="250.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../images/welcome-laundry-scene.png" />
+                     </image>
+                  </ImageView>
+                  <VBox alignment="CENTER" spacing="14.0">
+                     <children>
+                        <Button fx:id="loginButton" contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" onAction="#handleLogin" styleClass="welcome-action,primary">
+                           <graphic>
+                              <HBox alignment="CENTER_LEFT" prefWidth="420.0" spacing="18.0">
+                                 <children>
+                                    <ImageView fitHeight="46.0" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../images/icon-login.png" />
+                                       </image>
+                                    </ImageView>
+                                    <Label fx:id="loginButtonLabel" styleClass="welcome-action-text" text="Staff / Owner Login" />
+                                    <Region HBox.hgrow="ALWAYS" />
+                                    <SVGPath content="M0,0 L11,9 L0,18 Z" styleClass="welcome-action-arrow" />
+                                 </children>
+                              </HBox>
+                           </graphic>
+                        </Button>
+                        <Button contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" onAction="#handleAbout" styleClass="welcome-action">
+                           <graphic>
+                              <HBox alignment="CENTER_LEFT" prefWidth="420.0" spacing="18.0">
+                                 <children>
+                                    <ImageView fitHeight="46.0" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../images/icon-about.png" />
+                                       </image>
+                                    </ImageView>
+                                    <Label styleClass="welcome-action-text" text="About LaundryLink" />
+                                    <Region HBox.hgrow="ALWAYS" />
+                                    <SVGPath content="M0,0 L11,9 L0,18 Z" styleClass="welcome-action-arrow" />
+                                 </children>
+                              </HBox>
+                           </graphic>
+                        </Button>
+                        <Button contentDisplay="GRAPHIC_ONLY" mnemonicParsing="false" onAction="#handleExit" styleClass="welcome-action">
+                           <graphic>
+                              <HBox alignment="CENTER_LEFT" prefWidth="420.0" spacing="18.0">
+                                 <children>
+                                    <ImageView fitHeight="46.0" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../images/icon-exit.png" />
+                                       </image>
+                                    </ImageView>
+                                    <Label styleClass="welcome-action-text" text="Exit Application" />
+                                    <Region HBox.hgrow="ALWAYS" />
+                                    <SVGPath content="M0,0 L11,9 L0,18 Z" styleClass="welcome-action-arrow" />
+                                 </children>
+                              </HBox>
+                           </graphic>
+                        </Button>
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+            <Separator />
+            <HBox spacing="16.0">
+               <children>
+                  <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308" spacing="14.0" styleClass="feature-card" HBox.hgrow="ALWAYS">
+                     <children>
+                        <ImageView fitHeight="60.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/icon-customers.png" />
+                           </image>
+                        </ImageView>
+                        <VBox spacing="4.0">
+                           <children>
+                              <Label styleClass="feature-title" text="Customer Records" />
+                              <Label styleClass="feature-text" text="Manage customer information and history." wrapText="true" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308" spacing="14.0" styleClass="feature-card" HBox.hgrow="ALWAYS">
+                     <children>
+                        <ImageView fitHeight="60.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/icon-orders.png" />
+                           </image>
+                        </ImageView>
+                        <VBox spacing="4.0">
+                           <children>
+                              <Label styleClass="feature-title" text="Laundry Orders" />
+                              <Label styleClass="feature-text" text="Track orders from receiving to releasing." wrapText="true" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308" spacing="14.0" styleClass="feature-card" HBox.hgrow="ALWAYS">
+                     <children>
+                        <ImageView fitHeight="60.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/icon-payments.png" />
+                           </image>
+                        </ImageView>
+                        <VBox spacing="4.0">
+                           <children>
+                              <Label styleClass="feature-title" text="Cash Payments" />
+                              <Label styleClass="feature-text" text="Record payments and manage balances." wrapText="true" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+   </center>
+   <bottom>
+      <HBox styleClass="app-footer" BorderPane.alignment="CENTER">
+         <children>
+            <Label text="Desktop application   •   Shop staff only" />
+         </children>
+      </HBox>
+   </bottom>
+</BorderPane>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="14.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.laundrylink.controller.MyProfileController">
+   <stylesheets>
+      <URL value="@../css/laundrylink.css" />
+   </stylesheets>
+   <children>
+      <VBox>
+         <children>
+            <Label styleClass="page-title" text="My Profile" />
+            <Label styleClass="page-subtitle" text="Update your own name, username, and password." />
+         </children>
+      </VBox>
+      <HBox spacing="18.0">
+         <children>
+            <VBox maxHeight="-Infinity" maxWidth="560.0" styleClass="card" HBox.hgrow="ALWAYS">
+               <children>
+                  <HBox alignment="CENTER_LEFT" styleClass="card-header,compact">
+                     <children>
+                        <Label styleClass="card-header-title" text="Profile Details" />
+                     </children>
+                  </HBox>
+                  <VBox spacing="4.0" styleClass="card-body">
+                     <children>
+                        <Label styleClass="field-label" text="First Name" />
+                        <TextField fx:id="firstNameField" />
+                        <Label styleClass="field-label" text="Middle Name (optional)" />
+                        <TextField fx:id="middleNameField" />
+                        <Label styleClass="field-label" text="Last Name" />
+                        <TextField fx:id="lastNameField" />
+                        <Label styleClass="field-label" text="Username" />
+                        <TextField fx:id="usernameField" />
+                        <Label styleClass="field-label" text="Role" />
+                        <Label fx:id="roleLabel" styleClass="value-text" text="Role" />
+                        <Label fx:id="profileMessageLabel" managed="false" styleClass="form-error" visible="false" wrapText="true" />
+                        <Button fx:id="saveProfileButton" mnemonicParsing="false" onAction="#handleSaveProfile" styleClass="primary" text="Save Profile">
+                           <VBox.margin>
+                              <Insets top="12.0" />
+                           </VBox.margin>
+                        </Button>
+                     </children>
+                  </VBox>
+               </children>
+            </VBox>
+            <VBox maxHeight="-Infinity" maxWidth="560.0" styleClass="card" HBox.hgrow="ALWAYS">
+               <children>
+                  <HBox alignment="CENTER_LEFT" styleClass="card-header,compact">
+                     <children>
+                        <Label styleClass="card-header-title" text="Change Password" />
+                     </children>
+                  </HBox>
+                  <VBox spacing="4.0" styleClass="card-body">
+                     <children>
+                        <Label styleClass="field-label" text="Current Password" />
+                        <PasswordField fx:id="currentPasswordField" />
+                        <Label styleClass="field-label" text="New Password" />
+                        <PasswordField fx:id="newPasswordField" promptText="At least 8 characters" />
+                        <Label styleClass="field-label" text="Confirm New Password" />
+                        <PasswordField fx:id="confirmPasswordField" />
+                        <Label fx:id="passwordMessageLabel" managed="false" styleClass="form-error" visible="false" wrapText="true" />
+                        <Button fx:id="changePasswordButton" mnemonicParsing="false" onAction="#handleChangePassword" styleClass="primary" text="Change Password">
+                           <VBox.margin>
+                              <Insets top="12.0" />
+                           </VBox.margin>
+                        </Button>
+                     </children>
+                  </VBox>
+               </children>
+            </VBox>
+         </children>
+      </HBox>
+   </children>
+</VBox>
