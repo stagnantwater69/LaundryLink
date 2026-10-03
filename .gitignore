@@ -1,0 +1,13 @@
+# Build output
+/build/
+/dist/
+
+# Local NetBeans settings
+/nbproject/private/
+
+# Private database settings
+/config/database.properties
+
+
+/database/demo-orders.sql
+/test/

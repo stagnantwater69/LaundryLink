@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Application shell shown after login: header with user badge, tab bar, content area, status bar. -->
+
+<?import java.net.URL?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane prefHeight="720.0" prefWidth="1200.0" styleClass="screen" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.laundrylink.controller.MainShellController">
+   <stylesheets>
+      <URL value="@../css/laundrylink.css" />
+   </stylesheets>
+   <top>
+      <VBox>
+         <children>
+            <HBox alignment="CENTER_LEFT" styleClass="app-header">
+               <children>
+                  <fx:include source="brand-header.fxml" />
+                  <Region HBox.hgrow="ALWAYS" />
+                  <HBox alignment="CENTER" styleClass="user-badge">
+                     <children>
+                        <Hyperlink fx:id="userNameLink" onAction="#handleShowProfile" styleClass="user-name-link" text="Full Name">
+                           <tooltip>
+                              <Tooltip text="My Profile" />
+                           </tooltip>
+                        </Hyperlink>
+                        <Separator orientation="VERTICAL" />
+                        <Label fx:id="userRoleLabel" text="Role" />
+                        <Separator orientation="VERTICAL" />
+                        <Hyperlink onAction="#handleLogout" text="Logout" />
+                     </children>
+                  </HBox>
+               </children>
+            </HBox>
+            <HBox spacing="4.0" styleClass="tab-bar">
+               <children>
+                  <Button fx:id="dashboardTab" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleShowDashboard" styleClass="nav-tab" text="Dashboard" HBox.hgrow="ALWAYS">
+                     <graphic>
+                        <ImageView fitHeight="26.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/tab-dashboard.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </Button>
+                  <Button fx:id="customersTab" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleShowCustomers" styleClass="nav-tab" text="Customers" HBox.hgrow="ALWAYS">
+                     <graphic>
+                        <ImageView fitHeight="26.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/tab-customers.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </Button>
+                  <Button fx:id="laundryOrdersTab" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleShowLaundryOrders" styleClass="nav-tab" text="Laundry Orders" HBox.hgrow="ALWAYS">
+                     <graphic>
+                        <ImageView fitHeight="26.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/tab-orders.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </Button>
+                  <Button fx:id="paymentsTab" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleShowPayments" styleClass="nav-tab" text="Payments" HBox.hgrow="ALWAYS">
+                     <graphic>
+                        <ImageView fitHeight="26.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/tab-payments.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </Button>
+                  <Button fx:id="servicesTab" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleShowServices" styleClass="nav-tab" text="Services &amp; Prices" HBox.hgrow="ALWAYS">
+                     <graphic>
+                        <ImageView fitHeight="26.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/tab-services.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </Button>
+                  <Button fx:id="staffAccountsTab" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleShowStaffAccounts" styleClass="nav-tab" text="Staff Accounts" HBox.hgrow="ALWAYS">
+                     <graphic>
+                        <ImageView fitHeight="26.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/tab-staff.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </Button>
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+   </top>
+   <center>
+      <StackPane fx:id="contentArea" styleClass="content-area" BorderPane.alignment="CENTER" />
+   </center>
+   <bottom>
+      <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="app-footer" BorderPane.alignment="CENTER">
+         <children>
+            <Label text="LaundryLink" />
+            <Separator orientation="VERTICAL" />
+            <Label fx:id="statusLabel" text="Ready." />
+         </children>
+      </HBox>
+   </bottom>
+</BorderPane>
