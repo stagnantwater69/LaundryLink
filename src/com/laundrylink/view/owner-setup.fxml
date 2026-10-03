@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.SVGPath?>
+
+<BorderPane prefHeight="720.0" prefWidth="1200.0" styleClass="screen" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.laundrylink.controller.OwnerSetupController">
+   <stylesheets>
+      <URL value="@../css/laundrylink.css" />
+   </stylesheets>
+   <top>
+      <VBox>
+         <children>
+            <HBox styleClass="app-header">
+               <children>
+                  <fx:include source="brand-header.fxml" />
+               </children>
+            </HBox>
+            <Region styleClass="header-strip" />
+         </children>
+      </VBox>
+   </top>
+   <center>
+      <HBox alignment="CENTER" spacing="60.0" BorderPane.alignment="CENTER">
+         <padding>
+            <Insets bottom="18.0" left="30.0" right="30.0" top="18.0" />
+         </padding>
+         <children>
+            <VBox alignment="CENTER" prefWidth="470.0" spacing="16.0">
+               <children>
+                  <ImageView fitWidth="400.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../images/login-laundry-scene.png" />
+                     </image>
+                  </ImageView>
+                  <Label styleClass="tagline" text="Let's set up your shop." />
+                  <Label maxWidth="400.0" styleClass="note-text" text="This one-time setup creates the shop owner account. After this, the owner adds staff accounts from inside the application." textAlignment="CENTER" wrapText="true" />
+                  <ImageView fitWidth="300.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../images/divider-shirt.png" />
+                     </image>
+                  </ImageView>
+               </children>
+            </VBox>
+            <VBox maxHeight="-Infinity" prefWidth="540.0" styleClass="card">
+               <children>
+                  <HBox alignment="CENTER_LEFT" styleClass="card-header">
+                     <children>
+                        <ImageView fitHeight="46.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/icon-staff.png" />
+                           </image>
+                        </ImageView>
+                        <Label styleClass="card-header-title" text="Owner Setup" />
+                     </children>
+                  </HBox>
+                  <VBox spacing="4.0" styleClass="card-body">
+                     <children>
+                        <HBox spacing="12.0">
+                           <children>
+                              <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="field-label" text="First Name" />
+                                    <TextField fx:id="firstNameField" promptText="e.g. Juan" />
+                                 </children>
+                              </VBox>
+                              <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="field-label" text="Middle Name (optional)" />
+                                    <TextField fx:id="middleNameField" promptText="e.g. Santos" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                        <HBox spacing="12.0">
+                           <children>
+                              <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="field-label" text="Last Name" />
+                                    <TextField fx:id="lastNameField" promptText="e.g. Dela Cruz" />
+                                 </children>
+                              </VBox>
+                              <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="field-label" text="Username" />
+                                    <TextField fx:id="usernameField" promptText="e.g. juan.dc" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                        <HBox spacing="12.0">
+                           <children>
+                              <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="field-label" text="Password" />
+                                    <PasswordField fx:id="passwordField" promptText="At least 8 characters" />
+                                 </children>
+                              </VBox>
+                              <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="field-label" text="Confirm Password" />
+                                    <PasswordField fx:id="confirmPasswordField" promptText="Type it again" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                        <Label styleClass="note-text" text="Username: 3-30 letters, numbers, dots, or underscores." wrapText="true" />
+                        <Label fx:id="messageLabel" managed="false" styleClass="form-error" visible="false" wrapText="true" />
+                        <Button fx:id="createButton" defaultButton="true" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleCreateOwner" styleClass="primary,large-button" text="Create Owner Account">
+                           <VBox.margin>
+                              <Insets top="12.0" />
+                           </VBox.margin>
+                        </Button>
+                        <Button fx:id="backButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleBack" styleClass="large-button" text="Back to Welcome">
+                           <graphic>
+                              <SVGPath content="M8,0 L0,7 L8,14 M0,7 L20,7" styleClass="back-arrow" />
+                           </graphic>
+                           <VBox.margin>
+                              <Insets top="6.0" />
+                           </VBox.margin>
+                        </Button>
+                        <Separator>
+                           <VBox.margin>
+                              <Insets top="10.0" />
+                           </VBox.margin>
+                        </Separator>
+                        <HBox alignment="CENTER" spacing="10.0">
+                           <children>
+                              <ImageView fitHeight="24.0" pickOnBounds="true" preserveRatio="true">
+                                 <image>
+                                    <Image url="@../images/icon-about.png" />
+                                 </image>
+                              </ImageView>
+                              <Label styleClass="note-text" text="Only available until the owner account exists." />
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+               </children>
+            </VBox>
+         </children>
+      </HBox>
+   </center>
+</BorderPane>

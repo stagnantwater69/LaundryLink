@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Reusable LaundryLink logo + title. Included by other screens with fx:include. -->
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<HBox alignment="CENTER_LEFT" spacing="16" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <ImageView fitHeight="64.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../images/logo-basket.png" />
+         </image>
+      </ImageView>
+      <VBox alignment="CENTER_LEFT">
+         <children>
+            <Label styleClass="brand-title" text="LaundryLink" />
+            <Label styleClass="brand-subtitle" text="L A U N D R Y    S H O P    M A N A G E M E N T" />
+         </children>
+      </VBox>
+   </children>
+</HBox>
