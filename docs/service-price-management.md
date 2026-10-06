@@ -197,7 +197,7 @@ Laundry Order Management module.
 
 - [x] Step 1: Add `PricingUnit` and `LaundryService` domain models.
 - [x] Step 2: Add read-only `LaundryServiceDAO` operations.
-- [ ] Step 3: Add the business service for reading, validation, and authorization.
+- [x] Step 3: Add the business service for reading, validation, and authorization.
 - [ ] Step 4: Build the read-only Services & Prices table.
 - [ ] Step 5: Add the owner-only management form.
 - [ ] Step 6: Add service creation.
@@ -219,13 +219,13 @@ created only after the feature is ready for team review.
 | `model/PricingUnit.java` | Defines `KG` and `PIECE` and their UI labels |
 | `model/LaundryService.java` | Represents one service database record |
 | `dao/LaundryServiceDAO.java` | Loads all, active, or individual services |
+| `service/ServiceCatalogService.java` | Applies catalog visibility, validation, and login rules |
 | `docs/service-price-management.md` | Feature specification and progress record |
 
 ### Expected later
 
 | File | Expected purpose |
 |---|---|
-| `service/ServiceCatalogService.java` | Permissions, validation, and business operations |
 | `controller/ServicesPricesController.java` | UI behavior and background database calls |
 | `view/services-prices.fxml` | Service table, filters, owner form, and actions |
 | `css/laundrylink.css` | Module styling only if existing styles are insufficient |
