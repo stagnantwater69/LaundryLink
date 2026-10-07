@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +42,36 @@ public class LaundryServiceDAO {
                 return rs.next() ? mapRow(rs) : null;
             }
         }
+    }
+
+    public boolean serviceNameExists(Connection connection, String serviceName, int excludeServiceId)
+            throws SQLException {
+        String sql = "SELECT 1 FROM services WHERE service_name = ? AND id <> ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, serviceName);
+            statement.setInt(2, excludeServiceId);
+            try (ResultSet rs = statement.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    public int insert(Connection connection, String serviceName, PricingUnit pricingUnit,
+            java.math.BigDecimal currentPrice) throws SQLException {
+        String sql = "INSERT INTO services (service_name, pricing_unit, current_price, is_active)"
+                + " VALUES (?, ?, ?, 1)";
+        try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            statement.setString(1, serviceName);
+            statement.setString(2, pricingUnit.name());
+            statement.setBigDecimal(3, currentPrice);
+            statement.executeUpdate();
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    return keys.getInt(1);
+                }
+            }
+        }
+        throw new SQLException("Service was saved but no ID was returned.");
     }
 
     private List<LaundryService> findMany(Connection connection, String sql) throws SQLException {

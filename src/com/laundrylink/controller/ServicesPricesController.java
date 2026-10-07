@@ -8,6 +8,7 @@ import com.laundrylink.util.BackgroundTask;
 import com.laundrylink.util.Dialogs;
 import com.laundrylink.util.MoneyFormat;
 import com.laundrylink.util.SessionContext;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Locale;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -65,6 +66,16 @@ public class ServicesPricesController {
     private ComboBox<PricingUnit> pricingUnitComboBox;
     @FXML
     private TextField priceField;
+    @FXML
+    private Label formHintLabel;
+    @FXML
+    private Label formMessageLabel;
+    @FXML
+    private Button newButton;
+    @FXML
+    private Button saveButton;
+
+    private LaundryService selectedService;
 
     private final ServiceCatalogService serviceCatalogService = new ServiceCatalogService();
     private final ObservableList<LaundryService> services = FXCollections.observableArrayList();
@@ -76,7 +87,7 @@ public class ServicesPricesController {
         setUpTable();
         setUpFilters();
         setUpManagementForm();
-        loadServices();
+        loadServices(-1);
     }
 
     private void setUpTable() {
@@ -145,29 +156,80 @@ public class ServicesPricesController {
     }
 
     private void clearForm() {
+        selectedService = null;
         servicesTable.getSelectionModel().clearSelection();
         formTitleLabel.setText("New Service");
         serviceNameField.clear();
         pricingUnitComboBox.setValue(null);
         priceField.clear();
+        formHintLabel.setText("New services are active by default.");
+        saveButton.setText("Add Service");
+        saveButton.setDisable(false);
+        Dialogs.clearMessage(formMessageLabel);
     }
 
     private void showInForm(LaundryService service) {
         if (service == null) {
             return;
         }
+        selectedService = service;
         formTitleLabel.setText("Service Details");
         serviceNameField.setText(service.getServiceName());
         pricingUnitComboBox.setValue(service.getPricingUnit());
         priceField.setText(service.getCurrentPrice().toPlainString());
+        formHintLabel.setText("Editing existing services will be enabled in the next step.");
+        saveButton.setText("Save Changes");
+        saveButton.setDisable(true);
+        Dialogs.clearMessage(formMessageLabel);
+    }
+
+    @FXML
+    private void handleSave() {
+        if (selectedService != null) {
+            return;
+        }
+
+        BigDecimal price;
+        try {
+            String priceText = priceField.getText() == null ? "" : priceField.getText().trim();
+            price = priceText.isEmpty() ? null : new BigDecimal(priceText);
+        } catch (NumberFormatException e) {
+            Dialogs.showError(formMessageLabel, "Enter a valid price, such as 65.00.");
+            priceField.requestFocus();
+            return;
+        }
+
+        Dialogs.clearMessage(formMessageLabel);
+        setFormBusy(true);
+        BackgroundTask.run(() -> serviceCatalogService.createService(
+                serviceNameField.getText(), pricingUnitComboBox.getValue(), price),
+                created -> {
+                    setFormBusy(false);
+                    Dialogs.showSuccess(formMessageLabel,
+                            created.getServiceName() + " was added successfully.");
+                    loadServices(created.getId());
+                },
+                error -> {
+                    setFormBusy(false);
+                    Dialogs.showFailure(formMessageLabel, "Cannot add service", error);
+                });
+    }
+
+    private void setFormBusy(boolean busy) {
+        newButton.setDisable(busy);
+        saveButton.setDisable(busy || selectedService != null);
+        serviceNameField.setDisable(busy);
+        pricingUnitComboBox.setDisable(busy);
+        priceField.setDisable(busy);
+        saveButton.setText(busy ? "Adding..." : (selectedService == null ? "Add Service" : "Save Changes"));
     }
 
     @FXML
     private void handleRefresh() {
-        loadServices();
+        loadServices(selectedService == null ? -1 : selectedService.getId());
     }
 
-    private void loadServices() {
+    private void loadServices(int selectServiceId) {
         refreshButton.setDisable(true);
         tablePlaceholderLabel.setText("Loading services...");
         AppShell.setStatus("Loading services and prices...");
@@ -176,6 +238,7 @@ public class ServicesPricesController {
                     refreshButton.setDisable(false);
                     services.setAll(loaded);
                     applyFilters();
+                    selectById(selectServiceId);
                     AppShell.setStatus("Ready. " + loaded.size() + " service"
                             + (loaded.size() == 1 ? "" : "s") + " loaded.");
                 },
@@ -185,6 +248,16 @@ public class ServicesPricesController {
                     AppShell.setStatus("Could not load services and prices.");
                     Dialogs.error("Cannot load services", error);
                 });
+    }
+
+    private void selectById(int serviceId) {
+        for (LaundryService service : filteredServices) {
+            if (service.getId() == serviceId) {
+                servicesTable.getSelectionModel().select(service);
+                servicesTable.scrollTo(service);
+                return;
+            }
+        }
     }
 
     private void applyFilters() {
