@@ -70,6 +70,40 @@ public class ServiceCatalogService {
         }
     }
 
+    /** Updates a service's current catalog details. Owner only. */
+    public LaundryService updateService(int serviceId, String serviceName,
+            PricingUnit pricingUnit, BigDecimal price) throws ServiceException, SQLException {
+        SessionContext.requireAdmin();
+        if (serviceId <= 0) {
+            throw new ServiceException("Select a service to update.");
+        }
+
+        String cleanName = requireServiceName(serviceName);
+        PricingUnit cleanUnit = requirePricingUnit(pricingUnit);
+        BigDecimal cleanPrice = requirePrice(price);
+
+        try {
+            return TransactionHelper.inTransaction(connection -> {
+                LaundryService existing = laundryServiceDAO.findById(connection, serviceId);
+                if (existing == null) {
+                    throw new ServiceException("That service no longer exists. Refresh the list.");
+                }
+                if (laundryServiceDAO.serviceNameExists(connection, cleanName, serviceId)) {
+                    throw new ServiceException("A service named \"" + cleanName + "\" already exists.");
+                }
+                if (!laundryServiceDAO.update(connection, serviceId, cleanName, cleanUnit, cleanPrice)) {
+                    throw new ServiceException("That service could not be updated. Refresh the list.");
+                }
+                return laundryServiceDAO.findById(connection, serviceId);
+            });
+        } catch (SQLException e) {
+            if (e.getSQLState() != null && e.getSQLState().startsWith("23")) {
+                throw new ServiceException("A service with that name already exists.");
+            }
+            throw e;
+        }
+    }
+
     static String requireServiceName(String serviceName) throws ServiceException {
         String cleanName = serviceName == null ? "" : serviceName.trim().replaceAll("\\s+", " ");
         if (cleanName.isEmpty()) {
