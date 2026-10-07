@@ -188,6 +188,18 @@ Laundry Order Management will need active services containing:
 The order module should obtain them through the shared read-only service-catalog
 operation rather than duplicating SQL.
 
+The integration entry point is:
+
+```java
+ServiceCatalogService.listActiveServices()
+```
+
+The future Laundry Orders controller should call it through `BackgroundTask`,
+populate its service selector with the returned `LaundryService` objects, and
+show a useful empty-state message when no active services exist. This feature
+must not replace the placeholder Orders screen because that module is owned by
+the Laundry Order Management developer.
+
 When an order is created, it should copy the selected service name, unit, and
 price into `order_items`. `KG` permits decimal quantities; `PIECE` requires a
 whole-number quantity. Order calculations and inserts remain owned by the
@@ -204,6 +216,9 @@ Laundry Order Management module.
 - [x] Step 7: Add service editing and pricing-unit change confirmation.
 - [x] Step 8: Add activation and deactivation.
 - [ ] Step 9: Integrate the shared active-service contract with Orders.
+  The contract is ready, but `laundry-orders.fxml` is still a placeholder with
+  no controller. Complete the connection with the Orders module owner when its
+  service selector is implemented; do not duplicate the catalog query there.
 - [ ] Step 10: Complete role, validation, database, and UI testing.
 
 Each step must be reviewed, compiled, and committed before beginning the next
