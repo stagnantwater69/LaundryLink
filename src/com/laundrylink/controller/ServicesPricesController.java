@@ -72,6 +72,8 @@ public class ServicesPricesController {
     private Button newButton;
     @FXML
     private Button saveButton;
+    @FXML
+    private Button statusButton;
 
     private LaundryService selectedService;
 
@@ -163,6 +165,8 @@ public class ServicesPricesController {
         formHintLabel.setText("New services are active by default.");
         saveButton.setText("Add Service");
         saveButton.setDisable(false);
+        statusButton.setVisible(false);
+        statusButton.setManaged(false);
         Dialogs.clearMessage(formMessageLabel);
     }
 
@@ -178,6 +182,9 @@ public class ServicesPricesController {
         formHintLabel.setText("Changes affect new orders only. Existing orders keep their original details.");
         saveButton.setText("Save Changes");
         saveButton.setDisable(false);
+        statusButton.setText(service.isActive() ? "Deactivate Service" : "Activate Service");
+        statusButton.setVisible(true);
+        statusButton.setManaged(true);
         Dialogs.clearMessage(formMessageLabel);
     }
 
@@ -228,9 +235,45 @@ public class ServicesPricesController {
                 });
     }
 
+    @FXML
+    private void handleStatusChange() {
+        LaundryService service = selectedService;
+        if (service == null) {
+            return;
+        }
+
+        boolean activate = !service.isActive();
+        if (!activate && !Dialogs.confirm("Deactivate service",
+                "Deactivate " + service.getServiceName() + "?\n\n"
+                + "It will no longer be available for new orders. Existing orders will not change.")) {
+            return;
+        }
+
+        Dialogs.clearMessage(formMessageLabel);
+        setFormBusy(true);
+        statusButton.setText(activate ? "Activating..." : "Deactivating...");
+        BackgroundTask.run(() -> serviceCatalogService.setServiceActive(service.getId(), activate),
+                saved -> {
+                    setFormBusy(false);
+                    clearForm();
+                    loadServices(-1);
+                    AppShell.setStatus(saved.getServiceName()
+                            + (saved.isActive() ? " was activated." : " was deactivated."));
+                },
+                error -> {
+                    setFormBusy(false);
+                    statusButton.setText(service.isActive()
+                            ? "Deactivate Service" : "Activate Service");
+                    Dialogs.showFailure(formMessageLabel,
+                            activate ? "Cannot activate service" : "Cannot deactivate service",
+                            error);
+                });
+    }
+
     private void setFormBusy(boolean busy) {
         newButton.setDisable(busy);
         saveButton.setDisable(busy);
+        statusButton.setDisable(busy);
         serviceNameField.setDisable(busy);
         pricingUnitComboBox.setDisable(busy);
         priceField.setDisable(busy);

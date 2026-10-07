@@ -87,6 +87,16 @@ public class LaundryServiceDAO {
         }
     }
 
+    public boolean updateActiveStatus(Connection connection, int id, boolean active)
+            throws SQLException {
+        String sql = "UPDATE services SET is_active = ? WHERE id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setBoolean(1, active);
+            statement.setInt(2, id);
+            return statement.executeUpdate() == 1;
+        }
+    }
+
     private List<LaundryService> findMany(Connection connection, String sql) throws SQLException {
         List<LaundryService> services = new ArrayList<>();
         try (PreparedStatement statement = connection.prepareStatement(sql);

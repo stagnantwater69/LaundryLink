@@ -104,6 +104,29 @@ public class ServiceCatalogService {
         }
     }
 
+    /** Activates or deactivates a service without deleting its history. Owner only. */
+    public LaundryService setServiceActive(int serviceId, boolean active)
+            throws ServiceException, SQLException {
+        SessionContext.requireAdmin();
+        if (serviceId <= 0) {
+            throw new ServiceException("Select a service to update.");
+        }
+
+        return TransactionHelper.inTransaction(connection -> {
+            LaundryService existing = laundryServiceDAO.findById(connection, serviceId);
+            if (existing == null) {
+                throw new ServiceException("That service no longer exists. Refresh the list.");
+            }
+            if (existing.isActive() == active) {
+                return existing;
+            }
+            if (!laundryServiceDAO.updateActiveStatus(connection, serviceId, active)) {
+                throw new ServiceException("That service's status could not be updated. Refresh the list.");
+            }
+            return laundryServiceDAO.findById(connection, serviceId);
+        });
+    }
+
     static String requireServiceName(String serviceName) throws ServiceException {
         String cleanName = serviceName == null ? "" : serviceName.trim().replaceAll("\\s+", " ");
         if (cleanName.isEmpty()) {
