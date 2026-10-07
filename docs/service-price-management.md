@@ -199,7 +199,7 @@ Laundry Order Management module.
 - [x] Step 2: Add read-only `LaundryServiceDAO` operations.
 - [x] Step 3: Add the business service for reading, validation, and authorization.
 - [x] Step 4: Build the read-only Services & Prices table.
-- [ ] Step 5: Add the owner-only management form.
+- [x] Step 5: Add the owner-only management form.
 - [ ] Step 6: Add service creation.
 - [ ] Step 7: Add service editing and pricing-unit change confirmation.
 - [ ] Step 8: Add activation and deactivation.
@@ -220,8 +220,8 @@ created only after the feature is ready for team review.
 | `model/LaundryService.java` | Represents one service database record |
 | `dao/LaundryServiceDAO.java` | Loads all, active, or individual services |
 | `service/ServiceCatalogService.java` | Applies catalog visibility, validation, and login rules |
-| `controller/ServicesPricesController.java` | Loads, formats, searches, and filters the read-only catalog |
-| `view/services-prices.fxml` | Displays the service catalog table and read-only filters |
+| `controller/ServicesPricesController.java` | Loads and filters the catalog and prepares owner-only form state |
+| `view/services-prices.fxml` | Displays the catalog, read-only filters, and owner-only management form |
 | `docs/service-price-management.md` | Feature specification and progress record |
 
 ### Expected later
