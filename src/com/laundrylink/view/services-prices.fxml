@@ -55,7 +55,7 @@
                      <children>
                         <Label fx:id="formTitleLabel" styleClass="card-header-title" text="New Service" />
                         <Region HBox.hgrow="ALWAYS" />
-                        <Button mnemonicParsing="false" onAction="#handleNew" styleClass="compact-button" text="New" />
+                        <Button fx:id="newButton" mnemonicParsing="false" onAction="#handleNew" styleClass="compact-button" text="New" />
                      </children>
                   </HBox>
                   <VBox spacing="6.0" styleClass="card-body" VBox.vgrow="ALWAYS">
@@ -66,11 +66,17 @@
                         <ComboBox fx:id="pricingUnitComboBox" maxWidth="1.7976931348623157E308" promptText="Select a pricing unit" />
                         <Label styleClass="field-label" text="Current Price" />
                         <TextField fx:id="priceField" promptText="e.g. 65.00" />
-                        <Label styleClass="note-text" text="Select a row to inspect it, or click New to prepare a service. Saving will be added in the next step." wrapText="true">
+                        <Label fx:id="formHintLabel" styleClass="note-text" text="New services are active by default." wrapText="true">
                            <VBox.margin>
                               <Insets top="10.0" />
                            </VBox.margin>
                         </Label>
+                        <Label fx:id="formMessageLabel" managed="false" styleClass="form-error" visible="false" wrapText="true" />
+                        <Button fx:id="saveButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleSave" styleClass="primary" text="Add Service">
+                           <VBox.margin>
+                              <Insets top="10.0" />
+                           </VBox.margin>
+                        </Button>
                      </children>
                   </VBox>
                </children>

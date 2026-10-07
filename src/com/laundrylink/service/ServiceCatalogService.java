@@ -46,6 +46,30 @@ public class ServiceCatalogService {
         }
     }
 
+    /** Creates an active laundry service. Owner only. */
+    public LaundryService createService(String serviceName, PricingUnit pricingUnit, BigDecimal price)
+            throws ServiceException, SQLException {
+        SessionContext.requireAdmin();
+        String cleanName = requireServiceName(serviceName);
+        PricingUnit cleanUnit = requirePricingUnit(pricingUnit);
+        BigDecimal cleanPrice = requirePrice(price);
+
+        try {
+            return TransactionHelper.inTransaction(connection -> {
+                if (laundryServiceDAO.serviceNameExists(connection, cleanName, 0)) {
+                    throw new ServiceException("A service named \"" + cleanName + "\" already exists.");
+                }
+                int id = laundryServiceDAO.insert(connection, cleanName, cleanUnit, cleanPrice);
+                return laundryServiceDAO.findById(connection, id);
+            });
+        } catch (SQLException e) {
+            if (e.getSQLState() != null && e.getSQLState().startsWith("23")) {
+                throw new ServiceException("A service with that name already exists.");
+            }
+            throw e;
+        }
+    }
+
     static String requireServiceName(String serviceName) throws ServiceException {
         String cleanName = serviceName == null ? "" : serviceName.trim().replaceAll("\\s+", " ");
         if (cleanName.isEmpty()) {
