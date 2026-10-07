@@ -201,7 +201,7 @@ Laundry Order Management module.
 - [x] Step 4: Build the read-only Services & Prices table.
 - [x] Step 5: Add the owner-only management form.
 - [x] Step 6: Add service creation.
-- [ ] Step 7: Add service editing and pricing-unit change confirmation.
+- [x] Step 7: Add service editing and pricing-unit change confirmation.
 - [ ] Step 8: Add activation and deactivation.
 - [ ] Step 9: Integrate the shared active-service contract with Orders.
 - [ ] Step 10: Complete role, validation, database, and UI testing.
@@ -218,9 +218,9 @@ created only after the feature is ready for team review.
 |---|---|
 | `model/PricingUnit.java` | Defines `KG` and `PIECE` and their UI labels |
 | `model/LaundryService.java` | Represents one service database record |
-| `dao/LaundryServiceDAO.java` | Loads services, detects duplicate names, and inserts new services |
-| `service/ServiceCatalogService.java` | Applies catalog visibility, validation, login rules, and owner-only creation |
-| `controller/ServicesPricesController.java` | Loads and filters the catalog and handles owner-only service creation |
+| `dao/LaundryServiceDAO.java` | Loads, inserts, and updates services and detects duplicate names |
+| `service/ServiceCatalogService.java` | Applies catalog visibility, validation, login rules, and owner-only creation/editing |
+| `controller/ServicesPricesController.java` | Loads and filters the catalog and handles owner-only service creation/editing |
 | `view/services-prices.fxml` | Displays the catalog and owner-only create/management form |
 | `docs/service-price-management.md` | Feature specification and progress record |
 

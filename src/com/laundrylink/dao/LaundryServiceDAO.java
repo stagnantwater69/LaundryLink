@@ -74,6 +74,19 @@ public class LaundryServiceDAO {
         throw new SQLException("Service was saved but no ID was returned.");
     }
 
+    public boolean update(Connection connection, int id, String serviceName,
+            PricingUnit pricingUnit, java.math.BigDecimal currentPrice) throws SQLException {
+        String sql = "UPDATE services SET service_name = ?, pricing_unit = ?, current_price = ?"
+                + " WHERE id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, serviceName);
+            statement.setString(2, pricingUnit.name());
+            statement.setBigDecimal(3, currentPrice);
+            statement.setInt(4, id);
+            return statement.executeUpdate() == 1;
+        }
+    }
+
     private List<LaundryService> findMany(Connection connection, String sql) throws SQLException {
         List<LaundryService> services = new ArrayList<>();
         try (PreparedStatement statement = connection.prepareStatement(sql);

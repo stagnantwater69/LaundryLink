@@ -25,9 +25,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 
-/**
- * Read-only service catalog for staff and the owner.
- */
+/** Service catalog and owner-only management screen. */
 public class ServicesPricesController {
 
     private static final String ALL_STATUSES = "All";
@@ -177,18 +175,14 @@ public class ServicesPricesController {
         serviceNameField.setText(service.getServiceName());
         pricingUnitComboBox.setValue(service.getPricingUnit());
         priceField.setText(service.getCurrentPrice().toPlainString());
-        formHintLabel.setText("Editing existing services will be enabled in the next step.");
+        formHintLabel.setText("Changes affect new orders only. Existing orders keep their original details.");
         saveButton.setText("Save Changes");
-        saveButton.setDisable(true);
+        saveButton.setDisable(false);
         Dialogs.clearMessage(formMessageLabel);
     }
 
     @FXML
     private void handleSave() {
-        if (selectedService != null) {
-            return;
-        }
-
         BigDecimal price;
         try {
             String priceText = priceField.getText() == null ? "" : priceField.getText().trim();
@@ -199,29 +193,50 @@ public class ServicesPricesController {
             return;
         }
 
+        LaundryService serviceToUpdate = selectedService;
+        PricingUnit selectedUnit = pricingUnitComboBox.getValue();
+        if (serviceToUpdate != null
+                && selectedUnit != null
+                && selectedUnit != serviceToUpdate.getPricingUnit()
+                && !Dialogs.confirm("Change pricing unit",
+                        "Change " + serviceToUpdate.getServiceName() + " from "
+                        + serviceToUpdate.getPricingUnit().getDisplayName() + " to "
+                        + selectedUnit.getDisplayName() + "?\n\n"
+                        + "This affects new orders only. Existing orders keep their original unit and price.")) {
+            return;
+        }
+
         Dialogs.clearMessage(formMessageLabel);
         setFormBusy(true);
-        BackgroundTask.run(() -> serviceCatalogService.createService(
-                serviceNameField.getText(), pricingUnitComboBox.getValue(), price),
-                created -> {
+        BackgroundTask.run(() -> serviceToUpdate == null
+                ? serviceCatalogService.createService(
+                        serviceNameField.getText(), selectedUnit, price)
+                : serviceCatalogService.updateService(
+                        serviceToUpdate.getId(), serviceNameField.getText(), selectedUnit, price),
+                saved -> {
                     setFormBusy(false);
                     Dialogs.showSuccess(formMessageLabel,
-                            created.getServiceName() + " was added successfully.");
-                    loadServices(created.getId());
+                            saved.getServiceName() + (serviceToUpdate == null
+                                    ? " was added successfully." : " was updated successfully."));
+                    loadServices(saved.getId());
                 },
                 error -> {
                     setFormBusy(false);
-                    Dialogs.showFailure(formMessageLabel, "Cannot add service", error);
+                    Dialogs.showFailure(formMessageLabel,
+                            serviceToUpdate == null ? "Cannot add service" : "Cannot update service",
+                            error);
                 });
     }
 
     private void setFormBusy(boolean busy) {
         newButton.setDisable(busy);
-        saveButton.setDisable(busy || selectedService != null);
+        saveButton.setDisable(busy);
         serviceNameField.setDisable(busy);
         pricingUnitComboBox.setDisable(busy);
         priceField.setDisable(busy);
-        saveButton.setText(busy ? "Adding..." : (selectedService == null ? "Add Service" : "Save Changes"));
+        saveButton.setText(busy
+                ? (selectedService == null ? "Adding..." : "Saving...")
+                : (selectedService == null ? "Add Service" : "Save Changes"));
     }
 
     @FXML
