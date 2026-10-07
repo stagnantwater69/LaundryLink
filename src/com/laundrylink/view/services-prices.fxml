@@ -77,6 +77,7 @@
                               <Insets top="10.0" />
                            </VBox.margin>
                         </Button>
+                        <Button fx:id="statusButton" managed="false" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleStatusChange" text="Deactivate Service" visible="false" />
                      </children>
                   </VBox>
                </children>
