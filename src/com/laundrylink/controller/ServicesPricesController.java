@@ -1,6 +1,7 @@
 package com.laundrylink.controller;
 
 import com.laundrylink.model.LaundryService;
+import com.laundrylink.model.PricingUnit;
 import com.laundrylink.service.ServiceCatalogService;
 import com.laundrylink.util.AppShell;
 import com.laundrylink.util.BackgroundTask;
@@ -21,6 +22,7 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
 
 /**
  * Read-only service catalog for staff and the owner.
@@ -53,6 +55,16 @@ public class ServicesPricesController {
     private TableColumn<LaundryService, String> statusColumn;
     @FXML
     private Label tablePlaceholderLabel;
+    @FXML
+    private VBox managementPane;
+    @FXML
+    private Label formTitleLabel;
+    @FXML
+    private TextField serviceNameField;
+    @FXML
+    private ComboBox<PricingUnit> pricingUnitComboBox;
+    @FXML
+    private TextField priceField;
 
     private final ServiceCatalogService serviceCatalogService = new ServiceCatalogService();
     private final ObservableList<LaundryService> services = FXCollections.observableArrayList();
@@ -63,6 +75,7 @@ public class ServicesPricesController {
     private void initialize() {
         setUpTable();
         setUpFilters();
+        setUpManagementForm();
         loadServices();
     }
 
@@ -96,7 +109,7 @@ public class ServicesPricesController {
     private void setUpFilters() {
         boolean owner = SessionContext.isAdmin();
         pageSubtitleLabel.setText(owner
-                ? "View current prices and availability. Management controls will be added next."
+                ? "View the catalog and select a service to inspect its management details."
                 : "View laundry services currently available for new orders.");
 
         statusFilterComboBox.setItems(FXCollections.observableArrayList(
@@ -109,6 +122,44 @@ public class ServicesPricesController {
 
         searchField.textProperty().addListener((obs, oldText, newText) -> applyFilters());
         statusFilterComboBox.valueProperty().addListener((obs, oldStatus, newStatus) -> applyFilters());
+    }
+
+    private void setUpManagementForm() {
+        boolean owner = SessionContext.isAdmin();
+        managementPane.setVisible(owner);
+        managementPane.setManaged(owner);
+        if (!owner) {
+            return;
+        }
+
+        pricingUnitComboBox.setItems(FXCollections.observableArrayList(PricingUnit.values()));
+        servicesTable.getSelectionModel().selectedItemProperty()
+                .addListener((obs, oldService, newService) -> showInForm(newService));
+        clearForm();
+    }
+
+    @FXML
+    private void handleNew() {
+        clearForm();
+        serviceNameField.requestFocus();
+    }
+
+    private void clearForm() {
+        servicesTable.getSelectionModel().clearSelection();
+        formTitleLabel.setText("New Service");
+        serviceNameField.clear();
+        pricingUnitComboBox.setValue(null);
+        priceField.clear();
+    }
+
+    private void showInForm(LaundryService service) {
+        if (service == null) {
+            return;
+        }
+        formTitleLabel.setText("Service Details");
+        serviceNameField.setText(service.getServiceName());
+        pricingUnitComboBox.setValue(service.getPricingUnit());
+        priceField.setText(service.getCurrentPrice().toPlainString());
     }
 
     @FXML
