@@ -589,10 +589,25 @@
     -fx-text-fill: -ll-burgundy;
 }
 
+/* Plaque badge between Washing and Drying (see "processing shaper.png"):
+   raised tab on top, square ears on both sides, thin teal-gray outline.
+   The shape scales with the box, so the side padding clears the ears. */
 .processing-box {
-    -fx-background-color: -ll-outline, -ll-paper;
-    -fx-background-insets: 0, 1;
-    -fx-padding: 0.286em 1.143em;
+    -fx-shape: "M 97 20 L 270 20 L 290 0 L 757 0 L 777 20 L 947 20 L 947 105 L 1044 105 L 1044 270 L 947 270 L 947 390 L 97 390 L 97 270 L 0 270 L 0 105 L 97 105 Z";
+    -fx-scale-shape: true;
+    -fx-background-color: #7a9a9b, -ll-paper;
+    -fx-background-insets: 0, 1.5;
+    -fx-padding: 0.5em 2.143em 0.429em 2.143em;
+    -fx-min-width: 13em;
+    -fx-spacing: 0;
+}
+
+.processing-box .stat-caption {
+    -fx-text-fill: -ll-ink;
+}
+
+.processing-box .stat-caption.processing-title {
+    -fx-font-style: normal;
 }
 
 .processing-count {

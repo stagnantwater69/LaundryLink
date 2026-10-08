@@ -1,16 +1,416 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- Laundry Orders tab - placeholder. Owner: Ken. Replace this content and add a controller when the module is built. -->
-
 <?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.SVGPath?>
 
-<VBox spacing="6.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1">
+<ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" styleClass="page-scroll" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.laundrylink.controller.LaundryOrdersController">
    <stylesheets>
       <URL value="@../css/laundrylink.css" />
+      <URL value="@../css/laundry-orders.css" />
    </stylesheets>
+   <content>
+   <VBox spacing="8.0" styleClass="dense-page">
    <children>
-      <Label styleClass="page-title" text="Laundry Orders" />
+
+      <!-- Title row -->
+      <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="dashboard-header">
+         <children>
+            <ImageView fitHeight="44.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../images/icon-orders.png" />
+               </image>
+            </ImageView>
+            <Label styleClass="dashboard-title,orders-title" text="Laundry Orders" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Button fx:id="newOrderButton" minWidth="-Infinity" mnemonicParsing="false" onAction="#handleNew" text="New Order">
+               <graphic>
+                  <ImageView fitHeight="20.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../images/icon-document.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+            </Button>
+         </children>
+      </HBox>
+
+      <HBox spacing="12.0" VBox.vgrow="ALWAYS">
+         <children>
+
+            <!-- ============ Left column: order list + new order form ============ -->
+            <VBox spacing="10.0" HBox.hgrow="ALWAYS">
+               <children>
+
+                  <!-- Order list -->
+                  <VBox styleClass="card" VBox.vgrow="ALWAYS">
+                     <children>
+                        <VBox spacing="8.0" styleClass="card-body,tight" VBox.vgrow="ALWAYS">
+                           <children>
+                              <HBox alignment="CENTER_LEFT" fillHeight="false" spacing="12.0">
+                                 <children>
+                                    <HBox alignment="CENTER_LEFT" spacing="6.0" styleClass="search-box" HBox.hgrow="ALWAYS">
+                                       <children>
+                                          <ImageView fitHeight="18.0" pickOnBounds="true" preserveRatio="true">
+                                             <image>
+                                                <Image url="@../images/icon-search.png" />
+                                             </image>
+                                          </ImageView>
+                                          <TextField fx:id="searchField" promptText="Search by order no., customer name or phone..." HBox.hgrow="ALWAYS" />
+                                       </children>
+                                    </HBox>
+                                    <GridPane hgap="8.0" vgap="6.0">
+                                       <columnConstraints>
+                                          <ColumnConstraints halignment="RIGHT" hgrow="NEVER" />
+                                          <ColumnConstraints hgrow="NEVER" />
+                                       </columnConstraints>
+                                       <children>
+                                          <Label minWidth="-Infinity" styleClass="value-text" text="Laundry Status:" />
+                                          <ComboBox fx:id="statusFilterComboBox" prefWidth="170.0" GridPane.columnIndex="1" />
+                                          <Label minWidth="-Infinity" styleClass="value-text" text="Payment Status:" GridPane.rowIndex="1" />
+                                          <ComboBox fx:id="paymentFilterComboBox" prefWidth="170.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                       </children>
+                                    </GridPane>
+                                 </children>
+                              </HBox>
+                              <TableView fx:id="ordersTable" minHeight="180.0" VBox.vgrow="ALWAYS">
+                                 <columns>
+                                    <TableColumn fx:id="orderNumberColumn" prefWidth="90.0" text="Order No." />
+                                    <TableColumn fx:id="customerColumn" prefWidth="150.0" text="Customer" />
+                                    <TableColumn fx:id="dueDateColumn" prefWidth="105.0" text="Due Date" />
+                                    <TableColumn fx:id="totalColumn" prefWidth="95.0" text="Total" />
+                                    <TableColumn fx:id="statusColumn" prefWidth="135.0" text="Status" />
+                                    <TableColumn fx:id="paymentColumn" prefWidth="75.0" text="Payment" />
+                                 </columns>
+                                 <columnResizePolicy>
+                                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                 </columnResizePolicy>
+                                 <placeholder>
+                                    <Label fx:id="ordersPlaceholderLabel" styleClass="note-text" text="No orders yet." />
+                                 </placeholder>
+                              </TableView>
+                           </children>
+                        </VBox>
+                     </children>
+                  </VBox>
+
+                  <!-- New / edit order form -->
+                  <VBox styleClass="card">
+                     <children>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="card-header,compact">
+                           <children>
+                              <Label fx:id="formTitleLabel" styleClass="card-header-title" text="New Order" />
+                              <Region HBox.hgrow="ALWAYS" />
+                              <Label fx:id="formStatusLabel" styleClass="card-header-note" />
+                           </children>
+                        </HBox>
+                        <VBox spacing="6.0" styleClass="card-body,tight">
+                           <children>
+                              <HBox spacing="14.0">
+                                 <children>
+
+                                    <!-- Customer, service, quantity, items -->
+                                    <VBox spacing="6.0" HBox.hgrow="ALWAYS">
+                                       <children>
+                                          <GridPane hgap="8.0" vgap="6.0">
+                                             <columnConstraints>
+                                                <ColumnConstraints hgrow="NEVER" />
+                                                <ColumnConstraints hgrow="ALWAYS" />
+                                                <ColumnConstraints hgrow="NEVER" />
+                                             </columnConstraints>
+                                             <children>
+                                                <HBox alignment="CENTER_LEFT" spacing="6.0">
+                                                   <children>
+                                                      <ImageView fitHeight="18.0" pickOnBounds="true" preserveRatio="true">
+                                                         <image>
+                                                            <Image url="@../images/icon-staff.png" />
+                                                         </image>
+                                                      </ImageView>
+                                                      <Label minWidth="-Infinity" styleClass="form-row-label" text="Customer" />
+                                                   </children>
+                                                </HBox>
+                                                <ComboBox fx:id="customerComboBox" maxWidth="1.7976931348623157E308" promptText="Select a customer (type to search)" GridPane.columnIndex="1" />
+                                                <Button fx:id="newCustomerButton" minWidth="-Infinity" mnemonicParsing="false" onAction="#handleNewCustomer" styleClass="compact-button" text="New Customer" GridPane.columnIndex="2" />
+
+                                                <HBox alignment="CENTER_LEFT" spacing="6.0" GridPane.rowIndex="1">
+                                                   <children>
+                                                      <ImageView fitHeight="18.0" pickOnBounds="true" preserveRatio="true">
+                                                         <image>
+                                                            <Image url="@../images/tab-services.png" />
+                                                         </image>
+                                                      </ImageView>
+                                                      <Label minWidth="-Infinity" styleClass="form-row-label" text="Service" />
+                                                   </children>
+                                                </HBox>
+                                                <ComboBox fx:id="serviceComboBox" maxWidth="1.7976931348623157E308" promptText="Select a service" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="1" />
+
+                                                <Label minWidth="-Infinity" styleClass="form-row-label" text="Quantity" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
+                                                <HBox alignment="CENTER_LEFT" spacing="8.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="2">
+                                                   <children>
+                                                      <Spinner fx:id="quantitySpinner" editable="true" prefWidth="110.0" />
+                                                      <Label fx:id="unitLabel" minWidth="-Infinity" styleClass="value-text" text="kg" />
+                                                      <Button fx:id="addItemButton" minWidth="-Infinity" mnemonicParsing="false" onAction="#handleAddItem" styleClass="compact-button" text="Add Item">
+                                                         <graphic>
+                                                            <SVGPath content="M9 2 H15 V9 H22 V15 H15 V22 H9 V15 H2 V9 H9 Z" scaleX="0.7" scaleY="0.7" styleClass="icon-add" />
+                                                         </graphic>
+                                                      </Button>
+                                                   </children>
+                                                </HBox>
+                                             </children>
+                                          </GridPane>
+                                          <TableView fx:id="itemsTable" styleClass="compact-table,form-items-table">
+                                             <columns>
+                                                <TableColumn fx:id="itemNumberColumn" maxWidth="34.0" minWidth="28.0" prefWidth="30.0" sortable="false" text="#" />
+                                                <TableColumn fx:id="itemServiceColumn" prefWidth="135.0" sortable="false" text="Service" />
+                                                <TableColumn fx:id="itemQuantityColumn" prefWidth="60.0" sortable="false" text="Qty" />
+                                                <TableColumn fx:id="itemPriceColumn" prefWidth="80.0" sortable="false" text="Unit Price" />
+                                                <TableColumn fx:id="itemSubtotalColumn" prefWidth="85.0" sortable="false" text="Subtotal" />
+                                                <TableColumn fx:id="itemActionColumn" maxWidth="48.0" minWidth="40.0" prefWidth="44.0" sortable="false" />
+                                             </columns>
+                                             <columnResizePolicy>
+                                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                             </columnResizePolicy>
+                                             <placeholder>
+                                                <Label styleClass="note-text" text="No services added yet." />
+                                             </placeholder>
+                                          </TableView>
+                                       </children>
+                                    </VBox>
+
+                                    <Separator orientation="VERTICAL" />
+
+                                    <!-- Expected date, notes, total, save -->
+                                    <VBox minWidth="270.0" prefWidth="290.0" spacing="6.0">
+                                       <children>
+                                          <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                             <children>
+                                                <Label minWidth="-Infinity" styleClass="form-row-label" text="Expected Completion" />
+                                                <DatePicker fx:id="expectedDatePicker" minWidth="138.0" maxWidth="1.7976931348623157E308" promptText="Select a date" HBox.hgrow="ALWAYS" />
+                                             </children>
+                                          </HBox>
+                                          <HBox spacing="8.0" VBox.vgrow="ALWAYS">
+                                             <children>
+                                                <Label minWidth="-Infinity" styleClass="form-row-label" text="Notes">
+                                                   <HBox.margin>
+                                                      <Insets top="4.0" />
+                                                   </HBox.margin>
+                                                </Label>
+                                                <TextArea fx:id="notesArea" prefRowCount="2" promptText="e.g. separate whites, fold neatly" wrapText="true" HBox.hgrow="ALWAYS" />
+                                             </children>
+                                          </HBox>
+                                          <Separator />
+                                          <HBox alignment="CENTER_LEFT" spacing="12.0">
+                                             <children>
+                                                <Label minWidth="-Infinity" styleClass="form-row-label" text="Total Amount" />
+                                                <Label fx:id="totalLabel" minWidth="-Infinity" styleClass="orders-total" text="PHP 0.00" />
+                                             </children>
+                                          </HBox>
+                                          <HBox spacing="10.0">
+                                             <children>
+                                                <Button fx:id="saveButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleSave" text="Save Order" HBox.hgrow="ALWAYS">
+                                                   <graphic>
+                                                      <SVGPath content="M2 2 H17 L22 7 V22 H2 Z M6 2 V8 H15 V2 Z M6 13 H18 V22 H6 Z" fillRule="EVEN_ODD" scaleX="0.85" scaleY="0.85" styleClass="icon-save" />
+                                                   </graphic>
+                                                </Button>
+                                                <Button fx:id="clearFormButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleClearForm" text="Cancel" HBox.hgrow="ALWAYS">
+                                                   <graphic>
+                                                      <SVGPath content="M5 2 L12 9 L19 2 L22 5 L15 12 L22 19 L19 22 L12 15 L5 22 L2 19 L9 12 L2 5 Z" scaleX="0.8" scaleY="0.8" styleClass="icon-cancel" />
+                                                   </graphic>
+                                                </Button>
+                                             </children>
+                                          </HBox>
+                                       </children>
+                                    </VBox>
+                                 </children>
+                              </HBox>
+                              <Label fx:id="lockHintLabel" managed="false" styleClass="note-text" visible="false" wrapText="true" />
+                              <Label fx:id="formMessageLabel" managed="false" styleClass="form-error" visible="false" wrapText="true" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </VBox>
+               </children>
+            </VBox>
+
+            <!-- ============ Right column: order details ============ -->
+            <VBox minWidth="505.0" prefWidth="520.0" styleClass="card">
+               <children>
+                  <HBox alignment="CENTER_LEFT" styleClass="card-header,compact">
+                     <children>
+                        <Label styleClass="card-header-title" text="Order Details" />
+                     </children>
+                  </HBox>
+                  <VBox spacing="8.0" styleClass="card-body,tight" VBox.vgrow="ALWAYS">
+                     <children>
+                        <HBox spacing="12.0">
+                           <children>
+                              <GridPane hgap="14.0" vgap="2.0" HBox.hgrow="ALWAYS">
+                                 <columnConstraints>
+                                    <ColumnConstraints hgrow="NEVER" />
+                                    <ColumnConstraints hgrow="ALWAYS" />
+                                 </columnConstraints>
+                                 <children>
+                                    <Label minWidth="-Infinity" styleClass="detail-label" text="Order No." />
+                                    <Label fx:id="detailOrderNumberLabel" minWidth="-Infinity" styleClass="detail-highlight" text="—" GridPane.columnIndex="1" />
+                                    <Label minWidth="-Infinity" styleClass="detail-label" text="Customer" GridPane.rowIndex="1" />
+                                    <Label fx:id="detailCustomerLabel" styleClass="detail-value" text="Select an order" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                    <Label minWidth="-Infinity" styleClass="detail-label" text="Phone" GridPane.rowIndex="2" />
+                                    <Label fx:id="detailPhoneLabel" styleClass="detail-value" text="—" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                    <Label minWidth="-Infinity" styleClass="detail-label" text="Order Date" GridPane.rowIndex="3" />
+                                    <Label fx:id="detailOrderDateLabel" styleClass="detail-value" text="—" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                    <Label minWidth="-Infinity" styleClass="detail-label" text="Due Date" GridPane.rowIndex="4" />
+                                    <Label fx:id="detailDueDateLabel" styleClass="detail-value" text="—" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                    <Label minWidth="-Infinity" styleClass="detail-label" text="Status" GridPane.rowIndex="5">
+                                       <GridPane.margin>
+                                          <Insets top="6.0" />
+                                       </GridPane.margin>
+                                    </Label>
+                                    <Label fx:id="detailStatusLabel" minWidth="-Infinity" styleClass="pill" text="—" GridPane.columnIndex="1" GridPane.rowIndex="5">
+                                       <GridPane.margin>
+                                          <Insets top="6.0" />
+                                       </GridPane.margin>
+                                    </Label>
+                                    <Label minWidth="-Infinity" styleClass="detail-label" text="Payment Status" GridPane.rowIndex="6" />
+                                    <Label fx:id="detailPaymentLabel" minWidth="-Infinity" styleClass="pill" text="—" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                                 </children>
+                              </GridPane>
+                              <GridPane alignment="TOP_RIGHT" hgap="18.0" maxHeight="-Infinity" styleClass="totals-box" vgap="2.0">
+                                 <columnConstraints>
+                                    <ColumnConstraints hgrow="NEVER" />
+                                    <ColumnConstraints halignment="RIGHT" hgrow="NEVER" />
+                                 </columnConstraints>
+                                 <children>
+                                    <Label minWidth="-Infinity" styleClass="totals-label,strong" text="Total Amount" />
+                                    <Label fx:id="detailTotalLabel" minWidth="-Infinity" styleClass="detail-highlight" text="—" GridPane.columnIndex="1" />
+                                    <Separator GridPane.columnSpan="2" GridPane.rowIndex="1" />
+                                    <Label minWidth="-Infinity" styleClass="totals-label" text="Amount Paid" GridPane.rowIndex="2" />
+                                    <Label fx:id="detailPaidLabel" minWidth="-Infinity" styleClass="totals-value" text="—" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                    <Label minWidth="-Infinity" styleClass="totals-label" text="Balance" GridPane.rowIndex="3" />
+                                    <Label fx:id="detailBalanceLabel" minWidth="-Infinity" styleClass="detail-highlight" text="—" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                 </children>
+                              </GridPane>
+                           </children>
+                        </HBox>
+
+                        <VBox>
+                           <children>
+                              <Label maxWidth="1.7976931348623157E308" styleClass="section-header" text="Order Items" />
+                              <TableView fx:id="detailItemsTable" styleClass="compact-table,detail-items-table">
+                                 <columns>
+                                    <TableColumn fx:id="detailItemNumberColumn" maxWidth="34.0" minWidth="28.0" prefWidth="30.0" sortable="false" text="#" />
+                                    <TableColumn fx:id="detailItemServiceColumn" prefWidth="175.0" sortable="false" text="Service" />
+                                    <TableColumn fx:id="detailItemQuantityColumn" prefWidth="80.0" sortable="false" text="Quantity" />
+                                    <TableColumn fx:id="detailItemPriceColumn" prefWidth="85.0" sortable="false" text="Unit Price" />
+                                    <TableColumn fx:id="detailItemSubtotalColumn" prefWidth="90.0" sortable="false" text="Subtotal" />
+                                 </columns>
+                                 <columnResizePolicy>
+                                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                 </columnResizePolicy>
+                                 <placeholder>
+                                    <Label styleClass="note-text" text="—" />
+                                 </placeholder>
+                              </TableView>
+                           </children>
+                        </VBox>
+
+                        <HBox spacing="10.0" VBox.vgrow="ALWAYS">
+                           <children>
+                              <VBox prefWidth="135.0">
+                                 <children>
+                                    <Label maxWidth="1.7976931348623157E308" styleClass="section-header" text="Notes" />
+                                    <TextArea fx:id="detailNotesArea" editable="false" prefRowCount="4" styleClass="notes-view" wrapText="true" VBox.vgrow="ALWAYS" />
+                                 </children>
+                              </VBox>
+                              <VBox HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label maxWidth="1.7976931348623157E308" styleClass="section-header" text="Status History" />
+                                    <TableView fx:id="historyTable" styleClass="compact-table,history-table" VBox.vgrow="ALWAYS">
+                                       <columns>
+                                          <TableColumn fx:id="historyTimeColumn" prefWidth="150.0" sortable="false" text="Date &amp; Time" />
+                                          <TableColumn fx:id="historyStatusColumn" prefWidth="105.0" sortable="false" text="Status" />
+                                          <TableColumn fx:id="historyStaffColumn" prefWidth="90.0" sortable="false" text="Staff" />
+                                       </columns>
+                                       <columnResizePolicy>
+                                          <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                       </columnResizePolicy>
+                                       <placeholder>
+                                          <Label styleClass="note-text" text="—" />
+                                       </placeholder>
+                                    </TableView>
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+
+                        <HBox spacing="8.0">
+                           <children>
+                              <Button fx:id="recordPaymentButton" disable="true" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleRecordPayment" text="Record Payment" HBox.hgrow="ALWAYS">
+                                 <graphic>
+                                    <ImageView fitHeight="20.0" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../images/icon-coins-small.png" />
+                                       </image>
+                                    </ImageView>
+                                 </graphic>
+                              </Button>
+                              <Button fx:id="updateStatusButton" disable="true" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleUpdateStatus" text="Update Status" HBox.hgrow="ALWAYS">
+                                 <graphic>
+                                    <SVGPath content="M3 17.5 L3 21 L6.5 21 L18 9.5 L14.5 6 Z M15.5 5 L19 8.5 L21 6.5 L17.5 3 Z" scaleX="0.85" scaleY="0.85" styleClass="icon-edit" />
+                                 </graphic>
+                              </Button>
+                              <Button fx:id="releaseOrderButton" disable="true" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleReleaseOrder" text="Release Order" HBox.hgrow="ALWAYS">
+                                 <graphic>
+                                    <ImageView fitHeight="18.0" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../images/icon-release.png" />
+                                       </image>
+                                    </ImageView>
+                                 </graphic>
+                              </Button>
+                           </children>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" spacing="8.0">
+                           <children>
+                              <Button fx:id="editOrderButton" minWidth="-Infinity" disable="true" mnemonicParsing="false" onAction="#handleEditOrder" styleClass="compact-button" text="Edit Order" />
+                              <Button fx:id="cancelOrderButton" minWidth="-Infinity" disable="true" mnemonicParsing="false" onAction="#handleCancelOrder" styleClass="compact-button" text="Cancel Order" />
+                              <Button fx:id="deleteOrderButton" minWidth="-Infinity" disable="true" mnemonicParsing="false" onAction="#handleDeleteOrder" styleClass="compact-button" text="Delete Order" />
+                           </children>
+                        </HBox>
+                        <HBox fx:id="releaseMessageBox" alignment="CENTER_LEFT" managed="false" spacing="6.0" visible="false">
+                                 <children>
+                                    <ImageView fitHeight="18.0" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../images/icon-alert.png" />
+                                       </image>
+                                    </ImageView>
+                                    <Label fx:id="releaseMessageLabel" styleClass="release-warning" text="Full payment required before release." wrapText="true" />
+                                 </children>
+                              </HBox>
+                     </children>
+                  </VBox>
+               </children>
+            </VBox>
+         </children>
+      </HBox>
    </children>
-</VBox>
+   </VBox>
+   </content>
+</ScrollPane>

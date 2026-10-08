@@ -325,7 +325,7 @@
                   </HBox>
                   <VBox alignment="CENTER" styleClass="processing-box">
                      <children>
-                        <Label styleClass="stat-caption" text="Processing:" />
+                        <Label styleClass="stat-caption,processing-title" text="Processing:" />
                         <Label fx:id="flowProcessingLabel" styleClass="processing-count" text="0 orders" />
                         <Label styleClass="stat-caption" text="(Washing + Drying)" />
                      </children>
