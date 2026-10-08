@@ -1,0 +1,86 @@
+/* My Profile screen. Loaded together with laundrylink.css, which defines the -ll-* colors. */
+
+.profile-id-card {
+    -fx-background-color: -ll-teal, #e3e6d6, -ll-sage, #e3e6d6;
+    -fx-background-insets: 0, 3, 6, 7;
+    -fx-padding: 1.143em 1.714em;
+}
+
+.profile-id-card > .separator .line {
+    -fx-border-color: -ll-outline;
+}
+
+.profile-monogram {
+    -fx-background-color: -ll-teal, -ll-paper, -ll-burgundy;
+    -fx-background-insets: 0, 3, 6;
+    -fx-min-width: 5.714em;
+    -fx-min-height: 5.714em;
+    -fx-max-width: 5.714em;
+    -fx-max-height: 5.714em;
+}
+
+.profile-monogram-text {
+    -fx-font-size: 2.286em;
+    -fx-font-weight: bold;
+    -fx-text-fill: #f7f3e3;
+}
+
+.profile-name {
+    -fx-font-size: 2em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ll-burgundy;
+}
+
+.profile-role-badge {
+    -fx-font-size: 0.786em;
+    -fx-font-weight: bold;
+    -fx-text-fill: #f7f3e3;
+    -fx-padding: 0.25em 0.857em;
+    -fx-background-color: -ll-teal;
+}
+
+.profile-role-badge.owner {
+    -fx-background-color: -ll-burgundy;
+}
+
+.profile-username {
+    -fx-font-size: 1.071em;
+    -fx-font-style: italic;
+    -fx-text-fill: -ll-muted;
+}
+
+.profile-status {
+    -fx-font-weight: bold;
+    -fx-text-fill: #1f6b3a;
+}
+
+.profile-unsaved {
+    -fx-font-size: 0.929em;
+    -fx-font-style: italic;
+    -fx-text-fill: -ll-burgundy;
+}
+
+.profile-rules {
+    -fx-background-color: -ll-outline, -ll-paper;
+    -fx-background-insets: 0, 1;
+    -fx-padding: 0.643em 0.929em;
+}
+
+.profile-rules-title {
+    -fx-font-size: 0.929em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ll-ink;
+}
+
+.profile-rule {
+    -fx-font-size: 0.929em;
+    -fx-text-fill: -ll-muted;
+}
+
+.profile-rule.met {
+    -fx-text-fill: #1f6b3a;
+}
+
+.profile-rule.failed {
+    -fx-text-fill: #9b1c1c;
+}

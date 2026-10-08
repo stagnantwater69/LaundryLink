@@ -5,73 +5,176 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox spacing="14.0" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.laundrylink.controller.MyProfileController">
+<ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" styleClass="page-scroll" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.laundrylink.controller.MyProfileController">
    <stylesheets>
       <URL value="@../css/laundrylink.css" />
+      <URL value="@../css/my-profile.css" />
    </stylesheets>
+   <content>
+   <VBox spacing="14.0">
    <children>
       <VBox>
          <children>
             <Label styleClass="page-title" text="My Profile" />
-            <Label styleClass="page-subtitle" text="Update your own name, username, and password." />
+            <Label styleClass="page-subtitle" text="Your account details. Changes here apply only to your own account." />
          </children>
       </VBox>
-      <HBox spacing="18.0">
+
+      <!-- ID card: who is logged in -->
+      <HBox alignment="CENTER_LEFT" spacing="22.0" styleClass="profile-id-card">
          <children>
-            <VBox maxHeight="-Infinity" maxWidth="560.0" styleClass="card" HBox.hgrow="ALWAYS">
+            <StackPane styleClass="profile-monogram">
+               <children>
+                  <Label fx:id="monogramLabel" styleClass="profile-monogram-text" text="?" />
+               </children>
+            </StackPane>
+            <VBox alignment="CENTER_LEFT" spacing="6.0" HBox.hgrow="ALWAYS">
+               <children>
+                  <Label fx:id="fullNameLabel" styleClass="profile-name" text="—" />
+                  <HBox alignment="CENTER_LEFT" spacing="10.0">
+                     <children>
+                        <Label fx:id="roleBadgeLabel" styleClass="profile-role-badge" text="Role" />
+                        <Label fx:id="usernameBadgeLabel" styleClass="profile-username" text="@username" />
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+            <Separator orientation="VERTICAL" />
+            <GridPane hgap="18.0" vgap="4.0">
+               <columnConstraints>
+                  <ColumnConstraints hgrow="NEVER" />
+                  <ColumnConstraints hgrow="NEVER" minWidth="140.0" />
+               </columnConstraints>
+               <children>
+                  <Label styleClass="detail-label" text="Account status" />
+                  <Label fx:id="statusLabel" styleClass="profile-status" text="Active" GridPane.columnIndex="1" />
+                  <Label styleClass="detail-label" text="Access" GridPane.rowIndex="1" />
+                  <Label fx:id="accessLabel" styleClass="detail-value" text="—" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                  <Label styleClass="detail-label" text="Member since" GridPane.rowIndex="2" />
+                  <Label fx:id="memberSinceLabel" styleClass="detail-value" text="—" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+               </children>
+            </GridPane>
+            <ImageView fitHeight="64.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../images/logo-basket.png" />
+               </image>
+            </ImageView>
+         </children>
+      </HBox>
+
+      <HBox spacing="18.0" VBox.vgrow="ALWAYS">
+         <children>
+
+            <!-- Profile details -->
+            <VBox styleClass="card" HBox.hgrow="ALWAYS">
                <children>
                   <HBox alignment="CENTER_LEFT" styleClass="card-header,compact">
                      <children>
                         <Label styleClass="card-header-title" text="Profile Details" />
                      </children>
                   </HBox>
-                  <VBox spacing="4.0" styleClass="card-body">
+                  <VBox spacing="4.0" styleClass="card-body" VBox.vgrow="ALWAYS">
                      <children>
-                        <Label styleClass="field-label" text="First Name" />
-                        <TextField fx:id="firstNameField" />
-                        <Label styleClass="field-label" text="Middle Name (optional)" />
-                        <TextField fx:id="middleNameField" />
+                        <HBox spacing="12.0">
+                           <children>
+                              <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="field-label" text="First Name" />
+                                    <TextField fx:id="firstNameField" promptText="First name" />
+                                 </children>
+                              </VBox>
+                              <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="field-label" text="Middle Name" />
+                                    <TextField fx:id="middleNameField" promptText="Optional" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
                         <Label styleClass="field-label" text="Last Name" />
-                        <TextField fx:id="lastNameField" />
+                        <TextField fx:id="lastNameField" promptText="Last name" />
                         <Label styleClass="field-label" text="Username" />
-                        <TextField fx:id="usernameField" />
-                        <Label styleClass="field-label" text="Role" />
-                        <Label fx:id="roleLabel" styleClass="value-text" text="Role" />
+                        <TextField fx:id="usernameField" promptText="Letters, numbers, dots, underscores" />
+                        <Label styleClass="note-text" text="3 to 30 letters, numbers, dots, or underscores. You log in with this name." wrapText="true" />
+                        <Region VBox.vgrow="ALWAYS" />
                         <Label fx:id="profileMessageLabel" managed="false" styleClass="form-error" visible="false" wrapText="true" />
-                        <Button fx:id="saveProfileButton" mnemonicParsing="false" onAction="#handleSaveProfile" styleClass="primary" text="Save Profile">
+                        <HBox alignment="CENTER_RIGHT" spacing="10.0">
                            <VBox.margin>
                               <Insets top="12.0" />
                            </VBox.margin>
-                        </Button>
+                           <children>
+                              <Label fx:id="unsavedLabel" managed="false" styleClass="profile-unsaved" text="Unsaved changes" visible="false" />
+                              <Region HBox.hgrow="ALWAYS" />
+                              <Button fx:id="resetProfileButton" disable="true" mnemonicParsing="false" onAction="#handleResetProfile" text="Reset" />
+                              <Button fx:id="saveProfileButton" disable="true" mnemonicParsing="false" onAction="#handleSaveProfile" styleClass="primary" text="Save Profile" />
+                           </children>
+                        </HBox>
                      </children>
                   </VBox>
                </children>
             </VBox>
-            <VBox maxHeight="-Infinity" maxWidth="560.0" styleClass="card" HBox.hgrow="ALWAYS">
+
+            <!-- Change password -->
+            <VBox styleClass="card" HBox.hgrow="ALWAYS">
                <children>
                   <HBox alignment="CENTER_LEFT" styleClass="card-header,compact">
                      <children>
                         <Label styleClass="card-header-title" text="Change Password" />
                      </children>
                   </HBox>
-                  <VBox spacing="4.0" styleClass="card-body">
+                  <VBox spacing="4.0" styleClass="card-body" VBox.vgrow="ALWAYS">
                      <children>
                         <Label styleClass="field-label" text="Current Password" />
-                        <PasswordField fx:id="currentPasswordField" />
-                        <Label styleClass="field-label" text="New Password" />
-                        <PasswordField fx:id="newPasswordField" promptText="At least 8 characters" />
-                        <Label styleClass="field-label" text="Confirm New Password" />
-                        <PasswordField fx:id="confirmPasswordField" />
+                        <PasswordField fx:id="currentPasswordField" promptText="Your current password" />
+                        <HBox spacing="12.0">
+                           <children>
+                              <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="field-label" text="New Password" />
+                                    <PasswordField fx:id="newPasswordField" promptText="At least 8 characters" />
+                                 </children>
+                              </VBox>
+                              <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="field-label" text="Confirm New Password" />
+                                    <PasswordField fx:id="confirmPasswordField" promptText="Type it again" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                        <VBox spacing="3.0" styleClass="profile-rules">
+                           <VBox.margin>
+                              <Insets top="8.0" />
+                           </VBox.margin>
+                           <children>
+                              <Label styleClass="profile-rules-title" text="Your new password must:" />
+                              <Label fx:id="lengthRuleLabel" styleClass="profile-rule" text="• Have at least 8 characters" />
+                              <Label fx:id="matchRuleLabel" styleClass="profile-rule" text="• Match the confirmation" />
+                              <Label fx:id="differentRuleLabel" styleClass="profile-rule" text="• Be different from your current password" />
+                           </children>
+                        </VBox>
+                        <Region VBox.vgrow="ALWAYS" />
                         <Label fx:id="passwordMessageLabel" managed="false" styleClass="form-error" visible="false" wrapText="true" />
-                        <Button fx:id="changePasswordButton" mnemonicParsing="false" onAction="#handleChangePassword" styleClass="primary" text="Change Password">
+                        <HBox alignment="CENTER_RIGHT" spacing="10.0">
                            <VBox.margin>
                               <Insets top="12.0" />
                            </VBox.margin>
-                        </Button>
+                           <children>
+                              <Button fx:id="changePasswordButton" disable="true" mnemonicParsing="false" onAction="#handleChangePassword" styleClass="primary" text="Change Password" />
+                           </children>
+                        </HBox>
                      </children>
                   </VBox>
                </children>
@@ -79,4 +182,6 @@
          </children>
       </HBox>
    </children>
-</VBox>
+   </VBox>
+   </content>
+</ScrollPane>
