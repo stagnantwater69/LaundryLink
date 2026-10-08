@@ -1,6 +1,7 @@
 package com.laundrylink.model;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -19,10 +20,19 @@ public class OrderSummary {
     private final BigDecimal amountPaid;
     private final BigDecimal balance;
     private final PaymentStatus paymentStatus;
+    private final String customerPhone;
+    private final LocalDate dueDate;
 
     public OrderSummary(int id, String orderNumber, String customerName, String services, LocalDateTime receivedAt,
             OrderStatus status, BigDecimal totalAmount, BigDecimal amountPaid, BigDecimal balance,
             PaymentStatus paymentStatus) {
+        this(id, orderNumber, customerName, services, receivedAt, status, totalAmount, amountPaid, balance,
+                paymentStatus, null, null);
+    }
+
+    public OrderSummary(int id, String orderNumber, String customerName, String services, LocalDateTime receivedAt,
+            OrderStatus status, BigDecimal totalAmount, BigDecimal amountPaid, BigDecimal balance,
+            PaymentStatus paymentStatus, String customerPhone, LocalDate dueDate) {
         this.id = id;
         this.orderNumber = orderNumber;
         this.customerName = customerName;
@@ -33,6 +43,14 @@ public class OrderSummary {
         this.amountPaid = amountPaid;
         this.balance = balance;
         this.paymentStatus = paymentStatus;
+        this.customerPhone = customerPhone;
+        this.dueDate = dueDate;
+    }
+
+    /** Past its expected completion date and not yet handed over or cancelled. */
+    public boolean isOverdue(LocalDate today) {
+        return dueDate != null && dueDate.isBefore(today)
+                && status != OrderStatus.RELEASED && status != OrderStatus.CANCELLED;
     }
 
     /** Release rule: ready for pickup and fully paid. */
@@ -78,5 +96,15 @@ public class OrderSummary {
 
     public PaymentStatus getPaymentStatus() {
         return paymentStatus;
+    }
+
+    /** Customer contact number, or null when not recorded. */
+    public String getCustomerPhone() {
+        return customerPhone;
+    }
+
+    /** Expected completion date, or null when not set. */
+    public LocalDate getDueDate() {
+        return dueDate;
     }
 }

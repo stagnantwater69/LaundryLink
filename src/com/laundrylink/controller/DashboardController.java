@@ -383,7 +383,12 @@ public class DashboardController {
 
     @FXML
     private void handleViewOrder() {
-        AppShell.openTab(View.LAUNDRY_ORDERS);
+        OrderSummary order = ordersTable.getSelectionModel().getSelectedItem();
+        if (order == null) {
+            AppShell.openTab(View.LAUNDRY_ORDERS);
+        } else {
+            LaundryOrdersController.openOrder(order.getId());
+        }
     }
 
     @FXML

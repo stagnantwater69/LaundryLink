@@ -1,0 +1,180 @@
+/* Laundry Orders screen. Loaded together with laundrylink.css, which defines the -ll-* colors. */
+
+.table-view.compact-table .column-header .label,
+.table-view.compact-table .table-cell {
+    -fx-font-size: 0.857em;
+}
+
+.dashboard-title.orders-title {
+    -fx-text-fill: -ll-burgundy;
+}
+
+.card-header-note {
+    -fx-font-size: 0.857em;
+    -fx-font-style: italic;
+    -fx-text-fill: #d9e2d3;
+}
+
+.form-row-label {
+    -fx-font-size: 1em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ll-ink;
+}
+
+.orders-total {
+    -fx-font-size: 1.714em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ll-burgundy;
+}
+
+/* Thin teal bar above a sub-section (Order Items, Notes, Status History). */
+.section-header {
+    -fx-background-color: -ll-teal;
+    -fx-text-fill: #f7f3e3;
+    -fx-font-weight: bold;
+    -fx-padding: 0.214em 0.643em;
+}
+
+.totals-box {
+    -fx-background-color: -ll-outline, -ll-paper;
+    -fx-background-insets: 0, 1;
+    -fx-padding: 0.5em 0.857em;
+}
+
+.totals-label {
+    -fx-font-size: 1em;
+    -fx-text-fill: -ll-ink;
+}
+
+.totals-label.strong {
+    -fx-font-weight: bold;
+}
+
+.totals-value {
+    -fx-font-size: 1.143em;
+    -fx-text-fill: -ll-ink;
+}
+
+.text-area.notes-view .content {
+    -fx-background-color: -ll-paper;
+}
+
+/* Status / payment pills in Order Details */
+.pill {
+    -fx-font-size: 0.929em;
+    -fx-padding: 0.143em 0.714em;
+    -fx-background-color: #e3e6d6;
+    -fx-text-fill: -ll-ink;
+}
+
+.pill.status-ready {
+    -fx-background-color: #cfe5c0;
+    -fx-text-fill: #1f6b3a;
+}
+
+.pill.status-released {
+    -fx-background-color: #d6e0e6;
+    -fx-text-fill: -ll-teal-dark;
+}
+
+.pill.status-cancelled {
+    -fx-background-color: #e2ddd5;
+    -fx-text-fill: -ll-muted;
+}
+
+.pill.pay-paid {
+    -fx-background-color: #d3dff0;
+    -fx-text-fill: #1d4e89;
+}
+
+.pill.pay-partial {
+    -fx-background-color: #f3e2a4;
+    -fx-text-fill: #6b4e00;
+}
+
+.pill.pay-unpaid {
+    -fx-background-color: #f2d0cb;
+    -fx-text-fill: #9b1c1c;
+}
+
+/* Colored status / payment text in the order list */
+.table-row-cell .table-cell.status-ready {
+    -fx-text-fill: #1f6b3a;
+}
+
+.table-row-cell .table-cell.status-cancelled,
+.table-row-cell .table-cell.status-released {
+    -fx-text-fill: -ll-muted;
+}
+
+.table-row-cell .table-cell.pay-paid {
+    -fx-text-fill: #1d4e89;
+    -fx-font-weight: bold;
+}
+
+.table-row-cell .table-cell.pay-partial {
+    -fx-text-fill: #8a6100;
+    -fx-font-weight: bold;
+}
+
+.table-row-cell .table-cell.pay-unpaid {
+    -fx-text-fill: #9b1c1c;
+    -fx-font-weight: bold;
+}
+
+.table-row-cell .table-cell.cell-overdue {
+    -fx-text-fill: #9b1c1c;
+    -fx-font-style: italic;
+}
+
+/* Vector icons on buttons */
+.icon-add {
+    -fx-fill: #2e7d32;
+}
+
+.icon-save {
+    -fx-fill: -ll-teal;
+}
+
+.icon-cancel,
+.icon-delete {
+    -fx-fill: #b3261e;
+}
+
+.icon-edit {
+    -fx-fill: -ll-burgundy;
+}
+
+.button:disabled .icon-add,
+.button:disabled .icon-save,
+.button:disabled .icon-cancel,
+.button:disabled .icon-delete,
+.button:disabled .icon-edit {
+    -fx-fill: -ll-outline;
+}
+
+.button.icon-button {
+    -fx-padding: 0.071em 0.357em;
+    -fx-background-color: -ll-outline, #f6e9e6;
+    -fx-background-insets: 0, 1;
+}
+
+/* Laundry Orders packs a list, a form and a detail panel on one screen,
+   so it uses slightly smaller text than the other pages. */
+.dense-page {
+    -fx-font-size: 0.857em;
+}
+
+.table-view.form-items-table {
+    -fx-pref-height: 9em;
+    -fx-min-height: 7.5em;
+}
+
+.table-view.detail-items-table {
+    -fx-pref-height: 7.5em;
+    -fx-min-height: 6.5em;
+}
+
+.table-view.history-table {
+    -fx-min-height: 9em;
+}
