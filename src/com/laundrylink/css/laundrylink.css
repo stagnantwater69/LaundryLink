@@ -1,10 +1,9 @@
 /*
- * LaundryLink shared stylesheet - retro cream / teal / burgundy theme.
- * Every screen links this file; reuse these classes in new modules.
+ * LaundryLink shared styles: retro cream, teal and burgundy.
+ * Every screen uses this file, so reuse these classes in new screens.
  *
- * Sizes use em so the whole UI scales with the window: SceneNavigator sets
- * the root font size (14px at 1200x720) and everything else follows.
- * Borders, insets and radii stay in px.
+ * Sizes use em so the UI scales with the window (SceneNavigator sets the
+ * base font size). Borders and corners stay in px.
  */
 
 /* ---------- Palette & base ---------- */
@@ -424,26 +423,108 @@
     -fx-background-color: transparent;
 }
 
-/* ---------- Dialogs ---------- */
+/* ---------- Pop-ups (built by Dialogs) ---------- */
 .dialog-pane {
-    -fx-background-color: -ll-cream;
+    -fx-background-color: -ll-teal-dark, -ll-cream;
+    -fx-background-insets: 0, 3;
+    -fx-padding: 3;
 }
 
-.dialog-pane > .header-panel {
+/* Colored header strip: one color per kind of pop-up */
+.ll-dialog-header {
+    -fx-padding: 0.714em 1.286em 0.714em 1em;
     -fx-background-color: -ll-teal;
-    -fx-padding: 0.857em 1.143em;
+    -fx-border-color: transparent transparent rgba(0, 0, 0, 0.35) transparent;
+    -fx-border-width: 0 0 3 0;
 }
 
-.dialog-pane > .header-panel .label {
+.ll-dialog-success .ll-dialog-header {
+    -fx-background-color: #2f6b3a;
+}
+
+.ll-dialog-error .ll-dialog-header,
+.ll-dialog-danger .ll-dialog-header {
+    -fx-background-color: -ll-burgundy;
+}
+
+.ll-dialog-title {
     -fx-text-fill: #f7f3e3;
-    -fx-font-size: 1.286em;
+    -fx-font-size: 1.357em;
     -fx-font-weight: bold;
 }
 
-.dialog-pane > .content.label {
-    -fx-font-size: 1em;
+/* Message area */
+.dialog-pane > .content {
+    -fx-padding: 1.143em 1.429em 0.571em 1.429em;
+}
+
+.ll-dialog-text {
+    -fx-font-size: 1.071em;
     -fx-text-fill: -ll-ink;
-    -fx-padding: 1.143em;
+    -fx-line-spacing: 0.143em;
+}
+
+.ll-dialog-lead {
+    -fx-font-weight: bold;
+}
+
+.ll-dialog-heading {
+    -fx-font-size: 0.929em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ll-teal;
+    -fx-padding: 0.429em 0 0 0;
+}
+
+.ll-dialog-table {
+    -fx-background-color: -ll-outline, -ll-paper;
+    -fx-background-insets: 0, 1;
+    -fx-padding: 0.571em 0.857em;
+}
+
+.ll-dialog-row-name {
+    -fx-text-fill: -ll-muted;
+}
+
+.ll-dialog-row-value {
+    -fx-font-weight: bold;
+    -fx-text-fill: -ll-ink;
+}
+
+.ll-dialog-note {
+    -fx-font-size: 0.929em;
+    -fx-font-style: italic;
+    -fx-text-fill: -ll-muted;
+}
+
+.ll-dialog-details {
+    -fx-font-size: 0.857em;
+    -fx-text-fill: -ll-muted;
+    -fx-background-color: -ll-gray;
+    -fx-padding: 0.429em 0.571em;
+}
+
+/* Buttons row */
+.dialog-pane > .button-bar > .container {
+    -fx-padding: 0.571em 1.429em 1em 1.429em;
+}
+
+.dialog-pane .button {
+    -fx-min-width: 7.143em;
+    -fx-padding: 0.429em 1.143em;
+}
+
+.button.danger {
+    -fx-background-color: #3d0008, #a3261c;
+    -fx-text-fill: #fbf6e6;
+    -fx-font-weight: bold;
+}
+
+.button.danger:hover {
+    -fx-background-color: #3d0008, #b93127;
+}
+
+.button.danger:focused {
+    -fx-background-color: #e0b84a, #a3261c;
 }
 
 /* ---------- Top tab bar ---------- */
@@ -589,9 +670,8 @@
     -fx-text-fill: -ll-burgundy;
 }
 
-/* Plaque badge between Washing and Drying (see "processing shaper.png"):
-   raised tab on top, square ears on both sides, thin teal-gray outline.
-   The shape scales with the box, so the side padding clears the ears. */
+/* Badge between Washing and Drying (see "processing shaper.png").
+   It scales with the box; side padding keeps text clear of the ears. */
 .processing-box {
     -fx-shape: "M 97 20 L 270 20 L 290 0 L 757 0 L 777 20 L 947 20 L 947 105 L 1044 105 L 1044 270 L 947 270 L 947 390 L 97 390 L 97 270 L 0 270 L 0 105 L 97 105 Z";
     -fx-scale-shape: true;

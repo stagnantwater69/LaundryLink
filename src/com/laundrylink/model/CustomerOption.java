@@ -10,6 +10,7 @@ public class CustomerOption {
     private final String name;
     private final String contactNumber;
 
+    /** Creates a customer choice. */
     public CustomerOption(int id, String name, String contactNumber) {
         this.id = id;
         this.name = name;

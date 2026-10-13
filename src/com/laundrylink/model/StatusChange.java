@@ -1,9 +1,10 @@
 package com.laundrylink.model;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
- * One row of an order's status history: the stage it moved into, when, and by whom.
+ * One status history row: the stage the order moved into, when, and by whom.
  */
 public class StatusChange {
 
@@ -11,6 +12,7 @@ public class StatusChange {
     private final OrderStatus status;
     private final String changedByName;
 
+    /** One history row. */
     public StatusChange(LocalDateTime changedAt, OrderStatus status, String changedByName) {
         this.changedAt = changedAt;
         this.status = status;
@@ -27,5 +29,15 @@ public class StatusChange {
 
     public String getChangedByName() {
         return changedByName;
+    }
+
+    /** When it changed, like "Oct 2, 2026 09:15 AM". */
+    public String getChangedAtText() {
+        return changedAt.format(DateTimeFormatter.ofPattern("MMM d, yyyy hh:mm a"));
+    }
+
+    /** The stage name, e.g. "Ready for Pickup". */
+    public String getStatusText() {
+        return status.getDisplayName();
     }
 }

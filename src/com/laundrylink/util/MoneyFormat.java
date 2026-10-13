@@ -5,13 +5,14 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 
 /**
- * Shared money and quantity formatting. Amounts are shown as "PHP 1,234.50".
+ * Money and quantity formatting, e.g. "PHP 1,234.50".
  */
 public final class MoneyFormat {
 
     private MoneyFormat() {
     }
 
+    /** Formats money as "PHP 1,234.50". */
     public static String php(BigDecimal amount) {
         BigDecimal value = amount == null ? BigDecimal.ZERO : amount.setScale(2, RoundingMode.HALF_UP);
         return "PHP " + new DecimalFormat("#,##0.00").format(value);

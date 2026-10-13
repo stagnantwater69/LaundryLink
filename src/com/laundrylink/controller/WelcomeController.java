@@ -5,51 +5,49 @@ import com.laundrylink.util.BackgroundTask;
 import com.laundrylink.util.Dialogs;
 import com.laundrylink.util.SceneNavigator;
 import com.laundrylink.util.View;
+import java.sql.SQLException;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 
 /**
- * Welcome screen. "Staff / Owner Login" opens the first-run Owner Setup when no
- * owner account exists yet, otherwise the normal Login screen.
+ * Welcome screen: Login (or Register when no shop exists yet), About, and Exit.
  */
 public class WelcomeController {
 
-    @FXML
-    private Button loginButton;
-    @FXML
-    private Label loginButtonLabel;
+    @FXML private Button loginButton;
+    @FXML private Label loginButtonLabel;
 
     private final AccountService accountService = new AccountService();
 
+    /** Login button: opens Register if there's no shop yet, otherwise Login. */
     @FXML
     private void handleLogin() {
-        setBusy(true);
-        BackgroundTask.run(accountService::isOwnerSetupRequired,
-                setupRequired -> SceneNavigator.showScreen(setupRequired ? View.OWNER_SETUP : View.LOGIN),
-                error -> {
-                    setBusy(false);
-                    Dialogs.error("Cannot open login", error);
-                });
+        loginButton.setDisable(true);
+        loginButtonLabel.setText("Please wait...");
+        BackgroundTask.run(() -> accountService.isShopRegistrationRequired(), registrationRequired -> {
+            if (registrationRequired) {
+                SceneNavigator.showScreen(View.REGISTER);
+            } else {
+                SceneNavigator.showScreen(View.LOGIN);
+            }
+        }, error -> {
+            loginButton.setDisable(false);
+            loginButtonLabel.setText("Staff / Owner Login");
+            Dialogs.error("Cannot open login", error);
+        });
     }
 
+    /** About LaundryLink button: opens the About page. */
     @FXML
     private void handleAbout() {
-        Dialogs.info("About LaundryLink",
-                "LaundryLink - Laundry Shop Management\nVersion 1.0\n\n"
-                + "A desktop application for a single laundry shop: customer records, "
-                + "laundry orders and status tracking, cash payments, and daily summaries.\n\n"
-                + "For shop staff and the shop owner only.");
+        SceneNavigator.showScreen(View.ABOUT);
     }
 
+    /** Exit Application button: closes the program. */
     @FXML
     private void handleExit() {
         Platform.exit();
-    }
-
-    private void setBusy(boolean busy) {
-        loginButton.setDisable(busy);
-        loginButtonLabel.setText(busy ? "Please wait..." : "Staff / Owner Login");
     }
 }

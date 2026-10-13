@@ -4,8 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * One order opened on the Laundry Orders screen: the list summary plus the
- * fields and items needed to edit it.
+ * An order opened on Laundry Orders: the summary plus what's needed to edit it.
  */
 public class OrderDetails {
 
@@ -17,6 +16,7 @@ public class OrderDetails {
     private final List<OrderItemLine> items;
     private final List<StatusChange> statusHistory;
 
+    /** Full details of one order. */
     public OrderDetails(OrderSummary summary, int customerId, LocalDate expectedCompletionDate, String notes,
             String createdByName, List<OrderItemLine> items, List<StatusChange> statusHistory) {
         this.summary = summary;
@@ -28,17 +28,17 @@ public class OrderDetails {
         this.statusHistory = statusHistory;
     }
 
-    /** Customer and items can change only while Received with no payments. */
+    /** Customer and items can only change while Received and unpaid. */
     public boolean isItemEditable() {
         return summary.getStatus() == OrderStatus.RECEIVED && summary.getAmountPaid().signum() == 0;
     }
 
-    /** Same rule as editing items: unpaid and not yet processing. */
+    /** Same rule as editing: unpaid and not started yet. */
     public boolean isCancellable() {
         return isItemEditable();
     }
 
-    /** The stage Update Status moves to next, or null when the order cannot advance. */
+    /** The next stage for Update Status, or null if the order can't move on. */
     public OrderStatus getNextStatus() {
         switch (summary.getStatus()) {
             case RECEIVED:
@@ -52,7 +52,7 @@ public class OrderDetails {
         }
     }
 
-    /** Released and cancelled orders are closed records. */
+    /** Released and cancelled orders are closed. */
     public boolean isOpen() {
         return summary.getStatus() != OrderStatus.RELEASED && summary.getStatus() != OrderStatus.CANCELLED;
     }

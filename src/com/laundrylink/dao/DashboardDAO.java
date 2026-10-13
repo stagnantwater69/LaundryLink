@@ -10,14 +10,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Read-only queries for the dashboard. Each figure is aggregated on its own so
- * joins never multiply totals. Day ranges are [start, end): start of the
- * selected day inclusive, start of the next day exclusive.
+ * Dashboard figures and recent orders for one shop. A day runs from its start to the next day's start.
  */
 public class DashboardDAO {
 
@@ -32,30 +31,34 @@ public class DashboardDAO {
             + " JOIN customers c ON c.id = o.customer_id"
             + " JOIN v_order_balances b ON b.order_id = o.id";
 
-    public DashboardStats loadStats(Connection connection, LocalDateTime dayStart, LocalDateTime dayEnd)
-            throws SQLException {
-        int ordersReceived = queryInt(connection,
-                "SELECT COUNT(*) FROM orders WHERE received_at >= ? AND received_at < ?"
-                + " AND laundry_status <> 'CANCELLED'", dayStart, dayEnd);
-        BigDecimal paymentsCollected = queryMoney(connection,
-                "SELECT COALESCE(SUM(amount), 0) FROM payments WHERE paid_at >= ? AND paid_at < ?",
-                dayStart, dayEnd);
-        int released = queryInt(connection,
-                "SELECT COUNT(DISTINCT order_id) FROM order_status_history"
-                + " WHERE status = 'RELEASED' AND changed_at >= ? AND changed_at < ?", dayStart, dayEnd);
-        BigDecimal outstanding = queryMoney(connection,
+    /** The day's orders, payments and releases, plus the current workload. */
+    public DashboardStats loadStats(Connection connection, int shopId, LocalDateTime dayStart,
+            LocalDateTime dayEnd) throws SQLException {
+        int ordersReceived = countForDay(connection,
+                "SELECT COUNT(*) FROM orders WHERE shop_id = ? AND received_at >= ? AND received_at < ?"
+                + " AND laundry_status <> 'CANCELLED'", shopId, dayStart, dayEnd);
+        BigDecimal paymentsCollected = sumForDay(connection,
+                "SELECT COALESCE(SUM(p.amount), 0) FROM payments p JOIN orders o ON o.id = p.order_id"
+                + " WHERE o.shop_id = ? AND p.paid_at >= ? AND p.paid_at < ?",
+                shopId, dayStart, dayEnd);
+        int released = countForDay(connection,
+                "SELECT COUNT(DISTINCT h.order_id) FROM order_status_history h JOIN orders o ON o.id = h.order_id"
+                + " WHERE o.shop_id = ? AND h.status = 'RELEASED' AND h.changed_at >= ? AND h.changed_at < ?",
+                shopId, dayStart, dayEnd);
+        BigDecimal outstanding = sumForShop(connection,
                 "SELECT COALESCE(SUM(balance), 0) FROM v_order_balances"
-                + " WHERE laundry_status <> 'CANCELLED' AND balance > 0");
+                + " WHERE shop_id = ? AND laundry_status <> 'CANCELLED' AND balance > 0", shopId);
 
         int received = 0;
         int washing = 0;
         int drying = 0;
         int ready = 0;
         String countsSql = "SELECT laundry_status, COUNT(*) FROM orders"
-                + " WHERE laundry_status IN ('RECEIVED', 'WASHING', 'DRYING', 'READY_FOR_PICKUP')"
+                + " WHERE shop_id = ? AND laundry_status IN ('RECEIVED', 'WASHING', 'DRYING', 'READY_FOR_PICKUP')"
                 + " GROUP BY laundry_status";
-        try (PreparedStatement statement = connection.prepareStatement(countsSql);
-                ResultSet rs = statement.executeQuery()) {
+        try (PreparedStatement statement = connection.prepareStatement(countsSql)) {
+            statement.setInt(1, shopId);
+            ResultSet rs = statement.executeQuery();
             while (rs.next()) {
                 int count = rs.getInt(2);
                 switch (OrderStatus.valueOf(rs.getString(1))) {
@@ -78,12 +81,13 @@ public class DashboardDAO {
                 received, washing, drying);
     }
 
-    /** Most recent orders first (cancelled included so they can still be looked up). */
-    public List<OrderSummary> findRecentOrders(Connection connection, int limit) throws SQLException {
-        String sql = ORDER_SUMMARY_SELECT + " ORDER BY o.received_at DESC, o.id DESC LIMIT ?";
+    /** Newest orders first (cancelled ones too, so they can still be found). */
+    public List<OrderSummary> findRecentOrders(Connection connection, int shopId, int limit) throws SQLException {
+        String sql = ORDER_SUMMARY_SELECT + " WHERE o.shop_id = ? ORDER BY o.received_at DESC, o.id DESC LIMIT ?";
         List<OrderSummary> orders = new ArrayList<>();
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, limit);
+            statement.setInt(1, shopId);
+            statement.setInt(2, limit);
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     orders.add(mapOrderSummary(rs));
@@ -93,22 +97,27 @@ public class DashboardDAO {
         return orders;
     }
 
-    public OrderSummary findOrderSummary(Connection connection, int orderId) throws SQLException {
-        String sql = ORDER_SUMMARY_SELECT + " WHERE o.id = ?";
+    /** One order of the shop, or null. */
+    public OrderSummary findOrderSummary(Connection connection, int shopId, int orderId) throws SQLException {
+        String sql = ORDER_SUMMARY_SELECT + " WHERE o.id = ? AND o.shop_id = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, orderId);
+            statement.setInt(2, shopId);
             try (ResultSet rs = statement.executeQuery()) {
                 return rs.next() ? mapOrderSummary(rs) : null;
             }
         }
     }
 
-    public List<OrderItemLine> findOrderItems(Connection connection, int orderId) throws SQLException {
-        String sql = "SELECT service_name_snapshot, pricing_unit_snapshot, quantity, unit_price, subtotal"
-                + " FROM order_items WHERE order_id = ? ORDER BY id";
+    /** The service lines of one order. */
+    public List<OrderItemLine> findOrderItems(Connection connection, int shopId, int orderId) throws SQLException {
+        String sql = "SELECT i.service_name_snapshot, i.pricing_unit_snapshot, i.quantity, i.unit_price, i.subtotal"
+                + " FROM order_items i JOIN orders o ON o.id = i.order_id"
+                + " WHERE i.order_id = ? AND o.shop_id = ? ORDER BY i.id";
         List<OrderItemLine> items = new ArrayList<>();
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, orderId);
+            statement.setInt(2, shopId);
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {
                     items.add(new OrderItemLine(
@@ -123,6 +132,7 @@ public class DashboardDAO {
         return items;
     }
 
+    /** Builds an OrderSummary from the current row. */
     private OrderSummary mapOrderSummary(ResultSet rs) throws SQLException {
         String orderNumber = rs.getString("order_number");
         return new OrderSummary(
@@ -138,26 +148,43 @@ public class DashboardDAO {
                 PaymentStatus.valueOf(rs.getString("payment_status")));
     }
 
-    private int queryInt(Connection connection, String sql, Object... params) throws SQLException {
-        try (PreparedStatement statement = prepare(connection, sql, params);
-                ResultSet rs = statement.executeQuery()) {
+    /** Runs a COUNT for one shop and day. */
+    private int countForDay(Connection connection, String sql, int shopId, LocalDateTime start, LocalDateTime end)
+            throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, shopId);
+            statement.setTimestamp(2, Timestamp.valueOf(start));
+            statement.setTimestamp(3, Timestamp.valueOf(end));
+            ResultSet rs = statement.executeQuery();
             return rs.next() ? rs.getInt(1) : 0;
         }
     }
 
-    private BigDecimal queryMoney(Connection connection, String sql, Object... params) throws SQLException {
-        try (PreparedStatement statement = prepare(connection, sql, params);
-                ResultSet rs = statement.executeQuery()) {
-            BigDecimal value = rs.next() ? rs.getBigDecimal(1) : null;
-            return value == null ? BigDecimal.ZERO : value;
+    /** Runs a SUM for one shop and day (0 if there's nothing to add). */
+    private BigDecimal sumForDay(Connection connection, String sql, int shopId, LocalDateTime start,
+            LocalDateTime end) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, shopId);
+            statement.setTimestamp(2, Timestamp.valueOf(start));
+            statement.setTimestamp(3, Timestamp.valueOf(end));
+            return readMoney(statement.executeQuery());
         }
     }
 
-    private PreparedStatement prepare(Connection connection, String sql, Object... params) throws SQLException {
-        PreparedStatement statement = connection.prepareStatement(sql);
-        for (int i = 0; i < params.length; i++) {
-            statement.setObject(i + 1, params[i]);
+    /** Runs a SUM for one shop. */
+    private BigDecimal sumForShop(Connection connection, String sql, int shopId) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, shopId);
+            return readMoney(statement.executeQuery());
         }
-        return statement;
+    }
+
+    /** The single money value of a result, or 0. */
+    private BigDecimal readMoney(ResultSet rs) throws SQLException {
+        BigDecimal value = null;
+        if (rs.next()) {
+            value = rs.getBigDecimal(1);
+        }
+        return value == null ? BigDecimal.ZERO : value;
     }
 }

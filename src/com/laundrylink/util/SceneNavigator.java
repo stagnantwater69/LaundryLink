@@ -3,6 +3,7 @@ package com.laundrylink.util;
 import java.io.IOException;
 import java.net.URL;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -10,9 +11,7 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 /**
- * Shared navigation: swaps full screens on the main window and loads views
- * that are placed inside other screens (e.g. the main shell's content area).
- * Also keeps the UI scaled to the window size (see UiScale).
+ * Opens screens in the main window and keeps them scaled to its size.
  */
 public final class SceneNavigator {
 
@@ -23,31 +22,39 @@ public final class SceneNavigator {
     private SceneNavigator() {
     }
 
+    /** Creates the window's scene and watches for resizes. */
     public static void init(Stage primaryStage, double width, double height) {
         stage = primaryStage;
         scene = new Scene(new StackPane(), width, height);
         stage.setScene(scene);
 
-        ChangeListener<Number> resizeListener = (obs, oldSize, newSize) -> rescale();
+        ResizeListener resizeListener = new ResizeListener();
         scene.widthProperty().addListener(resizeListener);
         scene.heightProperty().addListener(resizeListener);
         scale = UiScale.forWindow(width, height);
     }
 
+    /** The main window. */
     public static Stage getStage() {
         return stage;
     }
 
-    /** Replaces the whole window content and returns the screen's controller. */
-    public static <T> T showScreen(View view) {
-        LoadedView<T> loaded = load(view);
-        scene.setRoot(loaded.getRoot());
-        UiScale.applyFont(loaded.getRoot(), scale);
-        return loaded.getController();
+    /** Shows a screen in the whole window and returns its controller. */
+    public static Object showScreen(View view) {
+        FXMLLoader loader = loadFxml(view);
+        Parent root = loader.getRoot();
+        scene.setRoot(root);
+        UiScale.applyFont(root, scale);
+        return loader.getController();
     }
 
-    /** Loads a view (already scaled to the current window) without displaying it. */
-    public static <T> LoadedView<T> load(View view) {
+    /** Loads a screen (like a tab's content) without showing it. */
+    public static Parent loadView(View view) {
+        return loadFxml(view).getRoot();
+    }
+
+    /** Loads a view's FXML and scales it to the window. */
+    private static FXMLLoader loadFxml(View view) {
         URL location = SceneNavigator.class.getResource(view.getPath());
         if (location == null) {
             throw new IllegalStateException("Screen not found: " + view.getPath());
@@ -56,13 +63,13 @@ public final class SceneNavigator {
         try {
             Parent root = loader.load();
             UiScale.applySizes(root, scale);
-            T controller = loader.getController();
-            return new LoadedView<>(root, controller);
+            return loader;
         } catch (IOException e) {
             throw new IllegalStateException("Cannot load screen " + view.getPath(), e);
         }
     }
 
+    /** Re-scales the screen when the window size changes enough. */
     private static void rescale() {
         double newScale = UiScale.forWindow(scene.getWidth(), scene.getHeight());
         if (newScale == scale) {
@@ -73,22 +80,12 @@ public final class SceneNavigator {
         UiScale.applySizes(scene.getRoot(), scale);
     }
 
-    public static final class LoadedView<T> {
-
-        private final Parent root;
-        private final T controller;
-
-        private LoadedView(Parent root, T controller) {
-            this.root = root;
-            this.controller = controller;
-        }
-
-        public Parent getRoot() {
-            return root;
-        }
-
-        public T getController() {
-            return controller;
+    /** Calls rescale() when the window is resized. */
+    private static class ResizeListener implements ChangeListener<Number> {
+        /** Runs on every resize. */
+        @Override
+        public void changed(ObservableValue<? extends Number> value, Number oldSize, Number newSize) {
+            rescale();
         }
     }
 }

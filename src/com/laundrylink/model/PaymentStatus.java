@@ -1,7 +1,7 @@
 package com.laundrylink.model;
 
 /**
- * Derived from payment records (see view v_order_balances); never stored.
+ * Worked out from the payments (see v_order_balances); never saved.
  */
 public enum PaymentStatus {
     UNPAID("Unpaid"),
@@ -18,6 +18,7 @@ public enum PaymentStatus {
         return displayName;
     }
 
+    /** Shows the readable name in lists. */
     @Override
     public String toString() {
         return displayName;

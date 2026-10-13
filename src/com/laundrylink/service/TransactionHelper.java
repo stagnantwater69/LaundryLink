@@ -5,11 +5,12 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
- * Runs a unit of work in a single database transaction: commit on success,
- * rollback on any failure.
+ * Runs several database writes as one transaction: all saved, or none.
+ * The Services module uses it; the other services handle transactions directly.
  */
 public final class TransactionHelper {
 
+    /** The writes to run inside the transaction. */
     public interface Work<T> {
         T execute(Connection connection) throws SQLException, ServiceException;
     }
@@ -17,6 +18,7 @@ public final class TransactionHelper {
     private TransactionHelper() {
     }
 
+    /** Commits if the work succeeds, rolls back if it fails. */
     public static <T> T inTransaction(Work<T> work) throws SQLException, ServiceException {
         try (Connection connection = ConnectionFactory.getConnection()) {
             connection.setAutoCommit(false);

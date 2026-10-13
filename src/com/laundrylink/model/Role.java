@@ -1,10 +1,10 @@
 package com.laundrylink.model;
 
 /**
- * Account roles. Stored in users.role using the enum constant name.
+ * Account roles, saved by name in users.role.
  */
 public enum Role {
-    ADMIN("Owner"),       // stored as ADMIN in the database
+    ADMIN("Owner"),       // saved as ADMIN
     STAFF("Staff");
 
     private final String displayName;
@@ -17,6 +17,7 @@ public enum Role {
         return displayName;
     }
 
+    /** Shows the readable name in lists. */
     @Override
     public String toString() {
         return displayName;

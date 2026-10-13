@@ -1,0 +1,117 @@
+/* About LaundryLink screen. Used with laundrylink.css, which has the -ll-* colors. */
+
+.about-page {
+    -fx-background-color: -ll-teal, -ll-cream;
+    -fx-background-insets: 0, 1.5;
+    -fx-padding: 0.857em 1.429em 1.143em 1.429em;
+}
+
+.about-title {
+    -fx-font-size: 2.571em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ll-burgundy;
+}
+
+.about-tagline {
+    -fx-font-size: 1.429em;
+    -fx-text-fill: -ll-ink;
+}
+
+.about-tagline-small {
+    -fx-font-size: 1.143em;
+    -fx-text-fill: -ll-ink;
+}
+
+.about-version {
+    -fx-font-size: 1em;
+    -fx-text-fill: -ll-ink;
+}
+
+.section-title {
+    -fx-font-size: 1.714em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ll-burgundy;
+}
+
+.about-text {
+    -fx-font-size: 1.071em;
+    -fx-text-fill: -ll-ink;
+    -fx-line-spacing: 0.214em;
+}
+
+/* Feature tiles under the description */
+.feature-tile {
+    -fx-background-color: -ll-outline, #ece8d4;
+    -fx-background-insets: 0, 1.5;
+    -fx-padding: 0.571em 0.714em;
+}
+
+.feature-tile-text {
+    -fx-font-size: 1em;
+    -fx-text-fill: -ll-ink;
+}
+
+/* Developer cards */
+.dev-card {
+    -fx-background-color: -ll-outline, -ll-paper;
+    -fx-background-insets: 0, 1.5;
+    -fx-padding: 0.714em;
+}
+
+.dev-avatar {
+    -fx-min-width: 4.571em;
+    -fx-min-height: 4.571em;
+    -fx-max-width: 4.571em;
+    -fx-max-height: 4.571em;
+    -fx-background-insets: 0, 2;
+}
+
+.dev-avatar.dev-blue {
+    -fx-background-color: -ll-ink, #2f6fb5;
+}
+
+.dev-avatar.dev-green {
+    -fx-background-color: -ll-ink, #3d8a48;
+}
+
+.dev-avatar.dev-red {
+    -fx-background-color: -ll-ink, #c0392b;
+}
+
+.dev-avatar.dev-purple {
+    -fx-background-color: -ll-ink, #7d4ea3;
+}
+
+.dev-initial {
+    -fx-font-family: "Arial";
+    -fx-font-size: 1.143em;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-padding: 0 0.286em 0.071em 0;
+    -fx-effect: dropshadow(one-pass-box, rgba(0, 0, 0, 0.6), 0, 0, 1, 1);
+}
+
+.dev-name {
+    -fx-font-size: 1.214em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ll-ink;
+}
+
+.dev-role {
+    -fx-font-size: 0.929em;
+    -fx-text-fill: -ll-burgundy;
+}
+
+.dev-text {
+    -fx-font-size: 0.857em;
+    -fx-text-fill: -ll-ink;
+}
+
+.about-footer {
+    -fx-background-color: -ll-teal;
+    -fx-padding: 0.5em 1.429em;
+}
+
+.about-footer .label {
+    -fx-text-fill: #f7f3e3;
+}
