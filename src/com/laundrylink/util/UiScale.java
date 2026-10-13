@@ -11,12 +11,11 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 /**
- * Makes the UI responsive: everything is designed at 1200x760 and scaled up
- * (or slightly down) to fit the window.
+ * Makes the UI fit the window. Screens are designed at 1200x760 and scaled
+ * from there.
  *
- * CSS sizes are in em, so they follow the root font size. Fixed sizes written
- * in FXML (image sizes, pref/min/max widths, HBox/VBox spacing) are scaled
- * here, using the original FXML value as the base.
+ * CSS uses em, so it follows the root font size. Fixed sizes in FXML (images,
+ * widths, spacing) are scaled here from their original values.
  */
 public final class UiScale {
 
@@ -31,19 +30,19 @@ public final class UiScale {
     private UiScale() {
     }
 
-    /** Scale factor for a window size, rounded so small resizes don't re-layout constantly. */
+    /** Scale for a window size, rounded so small resizes don't redo the layout. */
     public static double forWindow(double width, double height) {
         double scale = Math.min(width / DESIGN_WIDTH, height / DESIGN_HEIGHT);
         scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale));
         return Math.round(scale * 20) / 20.0;
     }
 
-    /** Root font size; every em size in the stylesheet follows it. */
+    /** Root font size; all em sizes follow it. */
     public static void applyFont(Parent sceneRoot, double scale) {
         sceneRoot.setStyle(String.format(java.util.Locale.ROOT, "-fx-font-size: %.2fpx;", BASE_FONT_SIZE * scale));
     }
 
-    /** Scales FXML fixed sizes in this subtree (call on every newly loaded view and after resizes). */
+    /** Scales the fixed FXML sizes in this view (call after loading and resizing). */
     public static void applySizes(Node node, double scale) {
         if (node instanceof ImageView) {
             ImageView image = (ImageView) node;
@@ -64,7 +63,7 @@ public final class UiScale {
             box.setSpacing(base(box, "spacing", box.getSpacing()) * scale);
         }
 
-        // Walk our own layout, not the internals of controls (skins).
+        // Only walk our own layout, not the insides of controls.
         if (node instanceof Labeled && ((Labeled) node).getGraphic() != null) {
             applySizes(((Labeled) node).getGraphic(), scale);
         }
@@ -78,13 +77,13 @@ public final class UiScale {
         }
     }
 
-    /** Only real fixed sizes are scaled; computed/unbounded markers are left as they are. */
+    /** Only scale real fixed sizes, not computed or unlimited ones. */
     private static double scaled(double baseValue, double scale) {
         boolean fixedSize = baseValue > 0 && baseValue != Double.MAX_VALUE;
         return fixedSize ? baseValue * scale : baseValue;
     }
 
-    /** Remembers the FXML value the first time a node is seen. */
+    /** Remembers a node's original FXML size the first time it's seen. */
     private static double base(Node node, String name, double currentValue) {
         Object stored = node.getProperties().get(BASE_KEY + name);
         if (stored == null) {

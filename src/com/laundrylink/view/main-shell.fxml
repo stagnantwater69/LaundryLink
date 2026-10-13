@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- Application shell shown after login: header with user badge, tab bar, content area, status bar. -->
+<!-- Main window after login: header, tab bar, content and status bar. -->
 
 <?import java.net.URL?>
 <?import javafx.scene.control.Button?>

@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Register Your Shop: makes a new shop and its owner account. Layout follows registerui.png. -->
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.SVGPath?>
+
+<BorderPane prefHeight="720.0" prefWidth="1200.0" styleClass="screen" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.laundrylink.controller.RegisterController">
+   <stylesheets>
+      <URL value="@../css/laundrylink.css" />
+      <URL value="@../css/register.css" />
+   </stylesheets>
+   <top>
+      <VBox>
+         <children>
+            <HBox styleClass="app-header">
+               <children>
+                  <fx:include source="brand-header.fxml" />
+               </children>
+            </HBox>
+            <Region styleClass="header-strip" />
+         </children>
+      </VBox>
+   </top>
+   <center>
+      <VBox styleClass="register-frame" BorderPane.alignment="CENTER">
+         <BorderPane.margin>
+            <Insets bottom="12.0" left="16.0" right="16.0" top="12.0" />
+         </BorderPane.margin>
+         <children>
+
+            <!-- Title bar with breadcrumb -->
+            <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="register-titlebar">
+               <children>
+                  <Label styleClass="register-title" text="Register Your Shop" />
+                  <Region HBox.hgrow="ALWAYS" />
+                  <HBox alignment="CENTER" spacing="8.0" styleClass="breadcrumb">
+                     <children>
+                        <Hyperlink fx:id="welcomeCrumb" onAction="#handleBack" styleClass="crumb-link" text="Welcome" />
+                        <Label styleClass="crumb-arrow" text="›" />
+                        <Label styleClass="crumb-current" text="Register" />
+                        <Label styleClass="crumb-arrow" text="›" />
+                        <Hyperlink fx:id="loginCrumb" onAction="#handleGoToLogin" styleClass="crumb-link" text="Login" />
+                     </children>
+                  </HBox>
+               </children>
+            </HBox>
+            <Label styleClass="register-subtitle" text="Create your shop and its owner account" />
+
+            <HBox spacing="18.0" VBox.vgrow="ALWAYS">
+               <VBox.margin>
+                  <Insets bottom="12.0" left="14.0" right="14.0" />
+               </VBox.margin>
+               <children>
+
+                  <!-- ============ Left: registration form ============ -->
+                  <VBox alignment="CENTER" spacing="10.0" styleClass="form-panel" HBox.hgrow="ALWAYS">
+                     <children>
+                        <GridPane hgap="14.0" vgap="8.0">
+                           <columnConstraints>
+                              <ColumnConstraints hgrow="NEVER" minWidth="160.0" />
+                              <ColumnConstraints hgrow="ALWAYS" />
+                           </columnConstraints>
+                           <children>
+                              <Label styleClass="register-label" text="Shop Name:" />
+                              <TextField fx:id="shopNameField" promptText="e.g. Sunshine Laundry" GridPane.columnIndex="1" />
+
+                              <Label styleClass="register-label" text="Owner First Name:" GridPane.rowIndex="1" />
+                              <HBox spacing="10.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                 <children>
+                                    <TextField fx:id="firstNameField" promptText="e.g. Juan" HBox.hgrow="ALWAYS" />
+                                    <TextField fx:id="middleNameField" prefWidth="140.0" promptText="Middle (optional)" />
+                                 </children>
+                              </HBox>
+
+                              <Label styleClass="register-label" text="Owner Last Name:" GridPane.rowIndex="2" />
+                              <TextField fx:id="lastNameField" promptText="e.g. Dela Cruz" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+                              <Separator GridPane.columnSpan="2" GridPane.rowIndex="3" />
+
+                              <Label styleClass="register-label" text="Username:" GridPane.rowIndex="4" />
+                              <TextField fx:id="usernameField" promptText="3-30 letters, numbers, dots or underscores" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+
+                              <Label styleClass="register-label" text="Password:" GridPane.rowIndex="5" />
+                              <StackPane GridPane.columnIndex="1" GridPane.rowIndex="5">
+                                 <children>
+                                    <PasswordField fx:id="passwordField" promptText="At least 8 characters" />
+                                    <TextField fx:id="visiblePasswordField" managed="false" promptText="At least 8 characters" visible="false" />
+                                 </children>
+                              </StackPane>
+
+                              <Label styleClass="register-label" text="Confirm Password:" GridPane.rowIndex="6" />
+                              <StackPane GridPane.columnIndex="1" GridPane.rowIndex="6">
+                                 <children>
+                                    <PasswordField fx:id="confirmPasswordField" promptText="Type it again" />
+                                    <TextField fx:id="visibleConfirmField" managed="false" promptText="Type it again" visible="false" />
+                                 </children>
+                              </StackPane>
+
+                              <CheckBox fx:id="showPasswordCheckBox" mnemonicParsing="false" onAction="#handleShowPassword" text="Show Password" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+                           </children>
+                        </GridPane>
+
+                        <Label fx:id="messageLabel" managed="false" styleClass="form-error" visible="false" wrapText="true" />
+
+                        <HBox spacing="14.0">
+                           <children>
+                              <Button fx:id="createButton" defaultButton="true" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleRegister" styleClass="large-button" text="Register Shop" HBox.hgrow="ALWAYS">
+                                 <graphic>
+                                    <ImageView fitHeight="30.0" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../images/icon-login.png" />
+                                       </image>
+                                    </ImageView>
+                                 </graphic>
+                              </Button>
+                              <Button fx:id="backButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleBack" prefWidth="170.0" styleClass="large-button" text="Back">
+                                 <graphic>
+                                    <SVGPath content="M8,0 L0,7 L8,14 M0,7 L20,7" styleClass="back-arrow" />
+                                 </graphic>
+                              </Button>
+                           </children>
+                        </HBox>
+
+                        <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="info-box">
+                           <children>
+                              <ImageView fitHeight="32.0" pickOnBounds="true" preserveRatio="true">
+                                 <image>
+                                    <Image url="@../images/icon-about.png" />
+                                 </image>
+                              </ImageView>
+                              <Label styleClass="info-text" text="You will be the owner of this shop. Each shop keeps its own customers, services, orders, payments and staff." wrapText="true" HBox.hgrow="ALWAYS" />
+                           </children>
+                        </HBox>
+                        <HBox alignment="CENTER" spacing="6.0">
+                           <children>
+                              <Label styleClass="note-text" text="Already registered?" />
+                              <Hyperlink onAction="#handleGoToLogin" styleClass="login-link" text="Log in instead" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+
+                  <!-- ============ Right: steps ============ -->
+                  <VBox maxWidth="440.0" minWidth="360.0" prefWidth="420.0" styleClass="card">
+                     <children>
+                        <HBox alignment="CENTER_LEFT" styleClass="card-header,compact">
+                           <children>
+                              <Label styleClass="card-header-title" text="Get Started with LaundryLink" />
+                           </children>
+                        </HBox>
+                        <VBox styleClass="steps-body" VBox.vgrow="ALWAYS">
+                           <children>
+                              <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="step-row" VBox.vgrow="ALWAYS">
+                                 <children>
+                                    <StackPane styleClass="step-number">
+                                       <children>
+                                          <Label text="1" />
+                                       </children>
+                                    </StackPane>
+                                    <ImageView fitHeight="52.0" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../images/icon-login.png" />
+                                       </image>
+                                    </ImageView>
+                                    <VBox alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                                       <children>
+                                          <Label styleClass="step-title" text="Register your shop" />
+                                          <Label styleClass="step-text" text="Name your shop and set up your owner login." wrapText="true" />
+                                       </children>
+                                    </VBox>
+                                 </children>
+                              </HBox>
+                              <Separator />
+                              <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="step-row" VBox.vgrow="ALWAYS">
+                                 <children>
+                                    <StackPane styleClass="step-number">
+                                       <children>
+                                          <Label text="2" />
+                                       </children>
+                                    </StackPane>
+                                    <ImageView fitHeight="52.0" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../images/icon-exit.png" />
+                                       </image>
+                                    </ImageView>
+                                    <VBox alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                                       <children>
+                                          <Label styleClass="step-title" text="Log in" />
+                                          <Label styleClass="step-text" text="Use your new account to open your shop's dashboard." wrapText="true" />
+                                       </children>
+                                    </VBox>
+                                 </children>
+                              </HBox>
+                              <Separator />
+                              <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="step-row" VBox.vgrow="ALWAYS">
+                                 <children>
+                                    <StackPane styleClass="step-number">
+                                       <children>
+                                          <Label text="3" />
+                                       </children>
+                                    </StackPane>
+                                    <ImageView fitHeight="52.0" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../images/service-fold.png" />
+                                       </image>
+                                    </ImageView>
+                                    <VBox alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                                       <children>
+                                          <Label styleClass="step-title" text="Add services and staff" />
+                                          <Label styleClass="step-text" text="Set your laundry services and prices, then add staff accounts." wrapText="true" />
+                                       </children>
+                                    </VBox>
+                                 </children>
+                              </HBox>
+                           </children>
+                        </VBox>
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+   </center>
+</BorderPane>

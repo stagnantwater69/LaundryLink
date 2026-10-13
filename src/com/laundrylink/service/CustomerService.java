@@ -4,11 +4,13 @@ import com.laundrylink.config.ConnectionFactory;
 import com.laundrylink.dao.CustomerDAO;
 import com.laundrylink.model.Customer;
 import com.laundrylink.model.CustomerOrderSummary;
+import com.laundrylink.model.Sex;
+import com.laundrylink.util.SessionContext;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
-/** Business rules for Customer Management. */
+/** Business rules for Customer Management. Each shop only sees its own customers. */
 public class CustomerService {
 
     private static final int MAX_NAME_LENGTH = 50;
@@ -17,43 +19,49 @@ public class CustomerService {
 
     private final CustomerDAO customerDAO = new CustomerDAO();
 
-    public List<Customer> findCustomers(String search) throws SQLException {
+    public List<Customer> findCustomers(String search) throws ServiceException, SQLException {
+        int shopId = SessionContext.getCurrentShopId();
         try (Connection connection = ConnectionFactory.getConnection()) {
-            return customerDAO.find(connection, search);
+            return customerDAO.find(connection, shopId, search);
         }
     }
 
-    public Customer addCustomer(String firstName, String middleName, String lastName,
+    /** Adds a customer; sex may be null (not specified). */
+    public Customer addCustomer(String firstName, String middleName, String lastName, Sex sex,
             String contactNumber, String address) throws ServiceException, SQLException {
+        int shopId = SessionContext.getCurrentShopId();
         CustomerFields fields = validate(firstName, middleName, lastName, contactNumber, address);
         try (Connection connection = ConnectionFactory.getConnection()) {
-            int id = customerDAO.insert(connection, fields.first, fields.middle, fields.last,
+            int id = customerDAO.insert(connection, shopId, fields.first, fields.middle, fields.last, sex,
                     fields.contact, fields.address);
-            return customerDAO.findById(connection, id);
+            return customerDAO.findById(connection, shopId, id);
         }
     }
 
-    public Customer updateCustomer(int id, String firstName, String middleName, String lastName,
+    /** Updates a customer; sex may be null (not specified). */
+    public Customer updateCustomer(int id, String firstName, String middleName, String lastName, Sex sex,
             String contactNumber, String address) throws ServiceException, SQLException {
+        int shopId = SessionContext.getCurrentShopId();
         CustomerFields fields = validate(firstName, middleName, lastName, contactNumber, address);
         try (Connection connection = ConnectionFactory.getConnection()) {
-            if (customerDAO.findById(connection, id) == null) {
+            if (customerDAO.findById(connection, shopId, id) == null) {
                 throw new ServiceException("That customer no longer exists. Refresh the list and try again.");
             }
-            if (!customerDAO.update(connection, id, fields.first, fields.middle, fields.last,
+            if (!customerDAO.update(connection, shopId, id, fields.first, fields.middle, fields.last, sex,
                     fields.contact, fields.address)) {
                 throw new ServiceException("Customer could not be updated.");
             }
-            return customerDAO.findById(connection, id);
+            return customerDAO.findById(connection, shopId, id);
         }
     }
 
     public void deleteCustomer(int id) throws ServiceException, SQLException {
+        int shopId = SessionContext.getCurrentShopId();
         try (Connection connection = ConnectionFactory.getConnection()) {
-            if (customerDAO.findById(connection, id) == null) {
+            if (customerDAO.findById(connection, shopId, id) == null) {
                 throw new ServiceException("That customer no longer exists. Refresh the list and try again.");
             }
-            if (customerDAO.deleteIfNoOrders(connection, id)) {
+            if (customerDAO.deleteIfNoOrders(connection, shopId, id)) {
                 return;
             }
             int orderCount = customerDAO.countOrders(connection, id);
@@ -62,14 +70,19 @@ public class CustomerService {
         }
     }
 
-    public List<CustomerOrderSummary> getOrderHistory(int customerId) throws SQLException {
+    public List<CustomerOrderSummary> getOrderHistory(int customerId) throws ServiceException, SQLException {
+        int shopId = SessionContext.getCurrentShopId();
         try (Connection connection = ConnectionFactory.getConnection()) {
-            return customerDAO.findOrderHistory(connection, customerId);
+            return customerDAO.findOrderHistory(connection, shopId, customerId);
         }
     }
 
-    public int getOrderCount(int customerId) throws SQLException {
+    public int getOrderCount(int customerId) throws ServiceException, SQLException {
+        int shopId = SessionContext.getCurrentShopId();
         try (Connection connection = ConnectionFactory.getConnection()) {
+            if (customerDAO.findById(connection, shopId, customerId) == null) {
+                return 0;
+            }
             return customerDAO.countOrders(connection, customerId);
         }
     }

@@ -17,6 +17,7 @@ public class ServiceOption {
     private final String pricingUnit;
     private final BigDecimal currentPrice;
 
+    /** Creates a service choice with its current price. */
     public ServiceOption(int id, String name, String pricingUnit, BigDecimal currentPrice) {
         this.id = id;
         this.name = name;

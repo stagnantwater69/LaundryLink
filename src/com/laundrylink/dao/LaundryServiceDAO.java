@@ -13,7 +13,7 @@ import java.util.List;
 
 /**
  * JDBC queries for the services table. The caller supplies the connection so
- * several calls can share one transaction when write operations are added.
+ * several calls can share one transaction. Every query is limited to one shop.
  */
 public class LaundryServiceDAO {
 
@@ -21,49 +21,53 @@ public class LaundryServiceDAO {
             "id, service_name, pricing_unit, current_price, is_active, created_at";
 
     /** Returns every service for the owner's management screen. */
-    public List<LaundryService> findAll(Connection connection) throws SQLException {
-        String sql = "SELECT " + COLUMNS + " FROM services"
+    public List<LaundryService> findAll(Connection connection, int shopId) throws SQLException {
+        String sql = "SELECT " + COLUMNS + " FROM services WHERE shop_id = ?"
                 + " ORDER BY is_active DESC, service_name";
-        return findMany(connection, sql);
+        return findMany(connection, sql, shopId);
     }
 
     /** Returns only services that may be selected for a new laundry order. */
-    public List<LaundryService> findAllActive(Connection connection) throws SQLException {
-        String sql = "SELECT " + COLUMNS + " FROM services WHERE is_active = 1"
+    public List<LaundryService> findAllActive(Connection connection, int shopId) throws SQLException {
+        String sql = "SELECT " + COLUMNS + " FROM services WHERE shop_id = ? AND is_active = 1"
                 + " ORDER BY service_name";
-        return findMany(connection, sql);
+        return findMany(connection, sql, shopId);
     }
 
-    public LaundryService findById(Connection connection, int id) throws SQLException {
-        String sql = "SELECT " + COLUMNS + " FROM services WHERE id = ?";
+    /** Returns null when the service does not exist or belongs to another shop. */
+    public LaundryService findById(Connection connection, int shopId, int id) throws SQLException {
+        String sql = "SELECT " + COLUMNS + " FROM services WHERE id = ? AND shop_id = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, id);
+            statement.setInt(2, shopId);
             try (ResultSet rs = statement.executeQuery()) {
                 return rs.next() ? mapRow(rs) : null;
             }
         }
     }
 
-    public boolean serviceNameExists(Connection connection, String serviceName, int excludeServiceId)
+    public boolean serviceNameExists(Connection connection, int shopId, String serviceName, int excludeServiceId)
             throws SQLException {
-        String sql = "SELECT 1 FROM services WHERE service_name = ? AND id <> ?";
+        String sql = "SELECT 1 FROM services WHERE shop_id = ? AND service_name = ? AND id <> ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, serviceName);
-            statement.setInt(2, excludeServiceId);
+            statement.setInt(1, shopId);
+            statement.setString(2, serviceName);
+            statement.setInt(3, excludeServiceId);
             try (ResultSet rs = statement.executeQuery()) {
                 return rs.next();
             }
         }
     }
 
-    public int insert(Connection connection, String serviceName, PricingUnit pricingUnit,
+    public int insert(Connection connection, int shopId, String serviceName, PricingUnit pricingUnit,
             java.math.BigDecimal currentPrice) throws SQLException {
-        String sql = "INSERT INTO services (service_name, pricing_unit, current_price, is_active)"
-                + " VALUES (?, ?, ?, 1)";
+        String sql = "INSERT INTO services (shop_id, service_name, pricing_unit, current_price, is_active)"
+                + " VALUES (?, ?, ?, ?, 1)";
         try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setString(1, serviceName);
-            statement.setString(2, pricingUnit.name());
-            statement.setBigDecimal(3, currentPrice);
+            statement.setInt(1, shopId);
+            statement.setString(2, serviceName);
+            statement.setString(3, pricingUnit.name());
+            statement.setBigDecimal(4, currentPrice);
             statement.executeUpdate();
             try (ResultSet keys = statement.getGeneratedKeys()) {
                 if (keys.next()) {
@@ -74,35 +78,39 @@ public class LaundryServiceDAO {
         throw new SQLException("Service was saved but no ID was returned.");
     }
 
-    public boolean update(Connection connection, int id, String serviceName,
+    public boolean update(Connection connection, int shopId, int id, String serviceName,
             PricingUnit pricingUnit, java.math.BigDecimal currentPrice) throws SQLException {
         String sql = "UPDATE services SET service_name = ?, pricing_unit = ?, current_price = ?"
-                + " WHERE id = ?";
+                + " WHERE id = ? AND shop_id = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, serviceName);
             statement.setString(2, pricingUnit.name());
             statement.setBigDecimal(3, currentPrice);
             statement.setInt(4, id);
+            statement.setInt(5, shopId);
             return statement.executeUpdate() == 1;
         }
     }
 
-    public boolean updateActiveStatus(Connection connection, int id, boolean active)
+    public boolean updateActiveStatus(Connection connection, int shopId, int id, boolean active)
             throws SQLException {
-        String sql = "UPDATE services SET is_active = ? WHERE id = ?";
+        String sql = "UPDATE services SET is_active = ? WHERE id = ? AND shop_id = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setBoolean(1, active);
             statement.setInt(2, id);
+            statement.setInt(3, shopId);
             return statement.executeUpdate() == 1;
         }
     }
 
-    private List<LaundryService> findMany(Connection connection, String sql) throws SQLException {
+    private List<LaundryService> findMany(Connection connection, String sql, int shopId) throws SQLException {
         List<LaundryService> services = new ArrayList<>();
-        try (PreparedStatement statement = connection.prepareStatement(sql);
-                ResultSet rs = statement.executeQuery()) {
-            while (rs.next()) {
-                services.add(mapRow(rs));
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, shopId);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    services.add(mapRow(rs));
+                }
             }
         }
         return services;

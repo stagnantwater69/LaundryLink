@@ -8,6 +8,7 @@ import com.laundrylink.util.BackgroundTask;
 import com.laundrylink.util.Dialogs;
 import com.laundrylink.util.MoneyFormat;
 import com.laundrylink.util.SessionContext;
+import com.laundrylink.util.Sprites;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Locale;
@@ -23,7 +24,11 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.effect.ColorAdjust;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.SVGPath;
 
 /** Service catalog and owner-only management screen. */
 public class ServicesPricesController {
@@ -32,6 +37,13 @@ public class ServicesPricesController {
     private static final String ACTIVE_STATUS = "Active";
     private static final String INACTIVE_STATUS = "Inactive";
 
+    private static final String BLOCK_ICON = "M12 2 A10 10 0 1 1 12 22 A10 10 0 1 1 12 2 Z"
+            + " M6.3 8.1 L15.9 17.7 A7 7 0 0 0 6.3 8.1 Z M8.1 6.3 A7 7 0 0 1 17.7 15.9 Z";
+    private static final String CHECK_ICON = "M2 12 L5 9 L10 14 L19 5 L22 8 L10 20 Z";
+    private static final ColorAdjust INACTIVE_SPRITE = new ColorAdjust(0, -1, 0, 0);
+
+    @FXML
+    private Label adminOnlyLabel;
     @FXML
     private Label pageSubtitleLabel;
     @FXML
@@ -59,11 +71,17 @@ public class ServicesPricesController {
     @FXML
     private Label formTitleLabel;
     @FXML
+    private ImageView serviceSpriteImage;
+    @FXML
     private TextField serviceNameField;
     @FXML
     private ComboBox<PricingUnit> pricingUnitComboBox;
     @FXML
     private TextField priceField;
+    @FXML
+    private Label statusValueLabel;
+    @FXML
+    private Circle statusDot;
     @FXML
     private Label formHintLabel;
     @FXML
@@ -73,7 +91,11 @@ public class ServicesPricesController {
     @FXML
     private Button saveButton;
     @FXML
+    private Button cancelButton;
+    @FXML
     private Button statusButton;
+    @FXML
+    private SVGPath statusButtonIcon;
 
     private LaundryService selectedService;
 
@@ -101,27 +123,89 @@ public class ServicesPricesController {
         statusColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
                 cell.getValue().isActive() ? ACTIVE_STATUS : INACTIVE_STATUS));
 
+        serviceNameColumn.setCellFactory(column -> new TableCell<LaundryService, String>() {
+            private final ImageView icon = new ImageView();
+
+            {
+                icon.setFitWidth(34.0);
+                icon.setFitHeight(34.0);
+                icon.setPreserveRatio(true);
+                icon.setSmooth(false);
+                getStyleClass().add("service-name-cell");
+            }
+
+            @Override
+            protected void updateItem(String name, boolean empty) {
+                super.updateItem(name, empty);
+                LaundryService service = rowService(this);
+                if (empty || name == null || service == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(name);
+                    icon.setImage(Sprites.service(name));
+                    // Inactive services show a faded, gray sprite.
+                    icon.setEffect(service.isActive() ? null : INACTIVE_SPRITE);
+                    icon.setOpacity(service.isActive() ? 1.0 : 0.6);
+                    setGraphic(icon);
+                }
+            }
+        });
+        pricingUnitColumn.setCellFactory(column -> centeredCell());
+        priceColumn.setCellFactory(column -> centeredCell());
+
         statusColumn.setCellFactory(column -> new TableCell<LaundryService, String>() {
+            private final Circle dot = new Circle(6.0);
+
             @Override
             protected void updateItem(String status, boolean empty) {
                 super.updateItem(status, empty);
                 getStyleClass().removeAll("status-active", "status-inactive");
                 if (empty || status == null) {
                     setText(null);
+                    setGraphic(null);
                 } else {
+                    boolean active = ACTIVE_STATUS.equals(status);
                     setText(status);
-                    getStyleClass().add(ACTIVE_STATUS.equals(status)
-                            ? "status-active" : "status-inactive");
+                    getStyleClass().add(active ? "status-active" : "status-inactive");
+                    showStatusDot(dot, active);
+                    setGraphic(dot);
+                    setGraphicTextGap(8.0);
                 }
             }
         });
     }
 
+    private static TableCell<LaundryService, String> centeredCell() {
+        TableCell<LaundryService, String> cell = new TableCell<LaundryService, String>() {
+            @Override
+            protected void updateItem(String value, boolean empty) {
+                super.updateItem(value, empty);
+                setText(empty ? null : value);
+            }
+        };
+        cell.getStyleClass().add("center-cell");
+        return cell;
+    }
+
+    private static LaundryService rowService(TableCell<LaundryService, ?> cell) {
+        int index = cell.getIndex();
+        TableView<LaundryService> table = cell.getTableView();
+        return table == null || index < 0 || index >= table.getItems().size() ? null : table.getItems().get(index);
+    }
+
+    private static void showStatusDot(Circle dot, boolean active) {
+        dot.getStyleClass().removeAll("status-dot", "active", "inactive");
+        dot.getStyleClass().addAll("status-dot", active ? "active" : "inactive");
+    }
+
     private void setUpFilters() {
         boolean owner = SessionContext.isAdmin();
         pageSubtitleLabel.setText(owner
-                ? "View the catalog and select a service to inspect its management details."
-                : "View laundry services currently available for new orders.");
+                ? "You can add, edit, and deactivate services."
+                : "Laundry services currently available for new orders.");
+        adminOnlyLabel.setVisible(owner);
+        adminOnlyLabel.setManaged(owner);
 
         statusFilterComboBox.setItems(FXCollections.observableArrayList(
                 ALL_STATUSES, ACTIVE_STATUS, INACTIVE_STATUS));
@@ -139,11 +223,17 @@ public class ServicesPricesController {
         boolean owner = SessionContext.isAdmin();
         managementPane.setVisible(owner);
         managementPane.setManaged(owner);
+        newButton.setVisible(owner);
+        newButton.setManaged(owner);
         if (!owner) {
             return;
         }
 
         pricingUnitComboBox.setItems(FXCollections.observableArrayList(PricingUnit.values()));
+        // Preview the sprite the service will get, picked from words in its name.
+        serviceNameField.textProperty().addListener((obs, oldName, newName) ->
+                serviceSpriteImage.setImage(Sprites.service(newName)));
+        serviceSpriteImage.setImage(Sprites.service(""));
         servicesTable.getSelectionModel().selectedItemProperty()
                 .addListener((obs, oldService, newService) -> showInForm(newService));
         clearForm();
@@ -162,7 +252,8 @@ public class ServicesPricesController {
         serviceNameField.clear();
         pricingUnitComboBox.setValue(null);
         priceField.clear();
-        formHintLabel.setText("New services are active by default.");
+        formHintLabel.setText("New services are active by default and can be used in new orders right away.");
+        showFormStatus(true, "Active by default (available for new orders)");
         saveButton.setText("Add Service");
         saveButton.setDisable(false);
         statusButton.setVisible(false);
@@ -175,14 +266,17 @@ public class ServicesPricesController {
             return;
         }
         selectedService = service;
-        formTitleLabel.setText("Service Details");
+        formTitleLabel.setText("Edit Service");
         serviceNameField.setText(service.getServiceName());
         pricingUnitComboBox.setValue(service.getPricingUnit());
         priceField.setText(service.getCurrentPrice().toPlainString());
-        formHintLabel.setText("Changes affect new orders only. Existing orders keep their original details.");
+        formHintLabel.setText("Price changes apply to new orders. Existing orders retain their original prices.");
+        showFormStatus(service.isActive(), service.isActive()
+                ? "Active (available for new orders)"
+                : "Inactive (hidden from new orders)");
         saveButton.setText("Save Changes");
         saveButton.setDisable(false);
-        statusButton.setText(service.isActive() ? "Deactivate Service" : "Activate Service");
+        showStatusButton(service.isActive());
         statusButton.setVisible(true);
         statusButton.setManaged(true);
         Dialogs.clearMessage(formMessageLabel);
@@ -262,16 +356,29 @@ public class ServicesPricesController {
                 },
                 error -> {
                     setFormBusy(false);
-                    statusButton.setText(service.isActive()
-                            ? "Deactivate Service" : "Activate Service");
+                    showStatusButton(service.isActive());
                     Dialogs.showFailure(formMessageLabel,
                             activate ? "Cannot activate service" : "Cannot deactivate service",
                             error);
                 });
     }
 
+    private void showFormStatus(boolean active, String text) {
+        statusValueLabel.setText(text);
+        showStatusDot(statusDot, active);
+    }
+
+    /** Deactivate (red block icon) for active services, Activate (green check) for inactive ones. */
+    private void showStatusButton(boolean serviceActive) {
+        statusButton.setText(serviceActive ? "Deactivate Service" : "Activate Service");
+        statusButtonIcon.setContent(serviceActive ? BLOCK_ICON : CHECK_ICON);
+        statusButtonIcon.getStyleClass().removeAll("icon-block", "icon-check");
+        statusButtonIcon.getStyleClass().add(serviceActive ? "icon-block" : "icon-check");
+    }
+
     private void setFormBusy(boolean busy) {
         newButton.setDisable(busy);
+        cancelButton.setDisable(busy);
         saveButton.setDisable(busy);
         statusButton.setDisable(busy);
         serviceNameField.setDisable(busy);

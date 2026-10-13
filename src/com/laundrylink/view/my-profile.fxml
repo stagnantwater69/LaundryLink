@@ -92,21 +92,21 @@
                               <VBox spacing="4.0" HBox.hgrow="ALWAYS">
                                  <children>
                                     <Label styleClass="field-label" text="First Name" />
-                                    <TextField fx:id="firstNameField" promptText="First name" />
+                                    <TextField fx:id="firstNameField" onKeyReleased="#handleProfileTyped" promptText="First name" />
                                  </children>
                               </VBox>
                               <VBox spacing="4.0" HBox.hgrow="ALWAYS">
                                  <children>
                                     <Label styleClass="field-label" text="Middle Name" />
-                                    <TextField fx:id="middleNameField" promptText="Optional" />
+                                    <TextField fx:id="middleNameField" onKeyReleased="#handleProfileTyped" promptText="Optional" />
                                  </children>
                               </VBox>
                            </children>
                         </HBox>
                         <Label styleClass="field-label" text="Last Name" />
-                        <TextField fx:id="lastNameField" promptText="Last name" />
+                        <TextField fx:id="lastNameField" onKeyReleased="#handleProfileTyped" promptText="Last name" />
                         <Label styleClass="field-label" text="Username" />
-                        <TextField fx:id="usernameField" promptText="Letters, numbers, dots, underscores" />
+                        <TextField fx:id="usernameField" onKeyReleased="#handleProfileTyped" promptText="Letters, numbers, dots, underscores" />
                         <Label styleClass="note-text" text="3 to 30 letters, numbers, dots, or underscores. You log in with this name." wrapText="true" />
                         <Region VBox.vgrow="ALWAYS" />
                         <Label fx:id="profileMessageLabel" managed="false" styleClass="form-error" visible="false" wrapText="true" />
@@ -137,19 +137,19 @@
                   <VBox spacing="4.0" styleClass="card-body" VBox.vgrow="ALWAYS">
                      <children>
                         <Label styleClass="field-label" text="Current Password" />
-                        <PasswordField fx:id="currentPasswordField" promptText="Your current password" />
+                        <PasswordField fx:id="currentPasswordField" onKeyReleased="#handlePasswordTyped" promptText="Your current password" />
                         <HBox spacing="12.0">
                            <children>
                               <VBox spacing="4.0" HBox.hgrow="ALWAYS">
                                  <children>
                                     <Label styleClass="field-label" text="New Password" />
-                                    <PasswordField fx:id="newPasswordField" promptText="At least 8 characters" />
+                                    <PasswordField fx:id="newPasswordField" onKeyReleased="#handlePasswordTyped" promptText="At least 8 characters" />
                                  </children>
                               </VBox>
                               <VBox spacing="4.0" HBox.hgrow="ALWAYS">
                                  <children>
                                     <Label styleClass="field-label" text="Confirm New Password" />
-                                    <PasswordField fx:id="confirmPasswordField" promptText="Type it again" />
+                                    <PasswordField fx:id="confirmPasswordField" onKeyReleased="#handlePasswordTyped" promptText="Type it again" />
                                  </children>
                               </VBox>
                            </children>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- Reusable LaundryLink logo + title. Included by other screens with fx:include. -->
+<!-- Shared LaundryLink logo and title, added to screens with fx:include. -->
 
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.image.Image?>

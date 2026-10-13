@@ -1,4 +1,4 @@
-/* My Profile screen. Loaded together with laundrylink.css, which defines the -ll-* colors. */
+/* My Profile screen. Used with laundrylink.css, which has the -ll-* colors. */
 
 .profile-id-card {
     -fx-background-color: -ll-teal, #e3e6d6, -ll-sage, #e3e6d6;
