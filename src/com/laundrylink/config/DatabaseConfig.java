@@ -1,18 +1,14 @@
 package com.laundrylink.config;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Properties;
 
 /**
- * Database connection settings.
- *
- * Read from config/database.properties (relative to the project/working folder),
- * with environment variables LAUNDRYLINK_DB_URL, LAUNDRYLINK_DB_USER and
- * LAUNDRYLINK_DB_PASSWORD taking priority when set.
+ * Reads the database URL, user and password from config/database.properties.
+ * Environment variables LAUNDRYLINK_DB_URL, LAUNDRYLINK_DB_USER and
+ * LAUNDRYLINK_DB_PASSWORD win if they're set.
  */
 public final class DatabaseConfig {
 
@@ -25,20 +21,26 @@ public final class DatabaseConfig {
     private final String user;
     private final String password;
 
+    /** Keeps the three settings. */
     private DatabaseConfig(String url, String user, String password) {
         this.url = url;
         this.user = user;
         this.password = password;
     }
 
+    /** Loads the settings file (if there is one) and returns the settings. */
     public static DatabaseConfig load() {
         Properties properties = new Properties();
-        Path path = Paths.get(System.getProperty("laundrylink.config", CONFIG_FILE));
-        if (Files.isRegularFile(path)) {
-            try (InputStream in = Files.newInputStream(path)) {
+        File file = new File(System.getProperty("laundrylink.config", CONFIG_FILE));
+        if (file.isFile()) {
+            FileInputStream in = null;
+            try {
+                in = new FileInputStream(file);
                 properties.load(in);
             } catch (IOException e) {
-                throw new IllegalStateException("Cannot read database settings from " + path.toAbsolutePath(), e);
+                throw new IllegalStateException("Cannot read database settings from " + file.getAbsolutePath(), e);
+            } finally {
+                closeQuietly(in);
             }
         }
 
@@ -48,13 +50,27 @@ public final class DatabaseConfig {
         return new DatabaseConfig(url.trim(), user.trim(), password);
     }
 
-    private static String firstNonBlank(String... values) {
-        for (String value : values) {
-            if (value != null && !value.trim().isEmpty()) {
-                return value;
-            }
+    /** The first of the three values that isn't blank. */
+    private static String firstNonBlank(String first, String second, String third) {
+        if (first != null && !first.trim().isEmpty()) {
+            return first;
         }
-        return "";
+        if (second != null && !second.trim().isEmpty()) {
+            return second;
+        }
+        return third == null ? "" : third;
+    }
+
+    /** Closes the settings file, ignoring close errors. */
+    private static void closeQuietly(FileInputStream in) {
+        if (in == null) {
+            return;
+        }
+        try {
+            in.close();
+        } catch (IOException ignored) {
+            // Nothing else to do here.
+        }
     }
 
     public String getUrl() {

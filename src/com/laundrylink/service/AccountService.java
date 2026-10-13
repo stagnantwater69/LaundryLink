@@ -10,16 +10,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 
 /**
- * Account Management rules: first-run owner setup, the owner's management of
- * staff accounts, and each user's own profile/password.
- *
- * There is exactly one owner (created by Owner Setup). The owner can only
- * create Staff accounts, never another owner. Owner-only methods check the
- * role here (not just by hiding buttons) and re-read the acting account from
- * the database. In the database the owner's role is stored as 'ADMIN'.
+ * Account rules: registering a shop, managing staff, and each user's own profile.
+ * The owner's role is 'ADMIN', and owners can only add Staff to their own shop.
  */
 public class AccountService {
 
@@ -27,163 +21,209 @@ public class AccountService {
 
     private static final int MAX_PASSWORD_LENGTH = 128;
     private static final int MAX_NAME_PART_LENGTH = 50;
-    private static final Pattern USERNAME_PATTERN = Pattern.compile("[A-Za-z0-9._]{3,30}");
+    private static final int MAX_SHOP_NAME_LENGTH = 100;
+    private static final int MIN_USERNAME_LENGTH = 3;
+    private static final int MAX_USERNAME_LENGTH = 30;
 
     private final UserDAO userDAO = new UserDAO();
 
-    // ------------------------------------------------------------------
-    // First-run owner setup
-    // ------------------------------------------------------------------
+    // ---- Shop registration ----
 
-    public boolean isOwnerSetupRequired() throws SQLException {
-        try (Connection connection = ConnectionFactory.getConnection()) {
-            return !userDAO.adminExists(connection, false);
+    /** True if no shop is registered yet (Welcome then opens Register). */
+    public boolean isShopRegistrationRequired() throws SQLException {
+        Connection connection = ConnectionFactory.getConnection();
+        try {
+            return !userDAO.anyShopExists(connection);
+        } finally {
+            DbUtil.closeQuietly(connection);
         }
     }
 
-    /**
-     * Creates the one owner account. Eligibility is re-checked inside the
-     * transaction, so this fails once the owner exists.
-     */
-    public User registerOwner(String firstName, String middleName, String lastName, String username,
-            String password, String confirmPassword) throws ServiceException, SQLException {
-        PersonName name = requireName(firstName, middleName, lastName);
+    /** Creates a new shop with its owner account. */
+    public User registerShopOwner(String shopName, String firstName, String middleName, String lastName,
+            String username, String password, String confirmPassword) throws ServiceException, SQLException {
+        String cleanShopName = requireShopName(shopName);
+        String[] name = requireName(firstName, middleName, lastName);
         String cleanUsername = requireUsername(username);
         requireNewPassword(password, confirmPassword);
         String hash = PasswordHasher.hash(password);
 
-        return saveWithUniqueUsername(() -> TransactionHelper.inTransaction(connection -> {
-            // Without this, two simultaneous setups both pass the check and deadlock on insert.
-            userDAO.lockOwnerSetup(connection);
-            if (userDAO.adminExists(connection, true)) {
-                throw new ServiceException("The owner account has already been set up. Please log in instead.");
-            }
+        Connection connection = null;
+        try {
+            connection = ConnectionFactory.getConnection();
+            connection.setAutoCommit(false);
             requireUsernameAvailable(connection, cleanUsername, 0);
-            int id = userDAO.insert(connection, name.first, name.middle, name.last, cleanUsername, hash, Role.ADMIN);
-            return userDAO.findById(connection, id).withoutPasswordHash();
-        }));
+            int shopId = userDAO.insertShop(connection, cleanShopName);
+            int id = userDAO.insert(connection, shopId, name[0], name[1], name[2], cleanUsername, hash, Role.ADMIN);
+            User owner = userDAO.findById(connection, id);
+            connection.commit();
+            return owner.withoutPasswordHash();
+        } catch (SQLException e) {
+            DbUtil.rollbackQuietly(connection);
+            if (DbUtil.isDuplicateKey(e)) {
+                throw new ServiceException("That username is already taken.");
+            }
+            throw e;
+        } catch (ServiceException e) {
+            DbUtil.rollbackQuietly(connection);
+            throw e;
+        } finally {
+            DbUtil.closeQuietly(connection);
+        }
     }
 
-    // ------------------------------------------------------------------
-    // Staff accounts (owner only)
-    // ------------------------------------------------------------------
+    // ---- Staff accounts ----
 
-    /** Staff accounts only; the owner's own account is edited in My Profile. */
+    /** The staff of the owner's shop (owners edit themselves in My Profile). */
     public List<User> listStaffAccounts() throws ServiceException, SQLException {
-        try (Connection connection = ConnectionFactory.getConnection()) {
-            requireActiveOwner(connection);
-            List<User> safeUsers = new ArrayList<>();
-            for (User user : userDAO.findAllStaff(connection)) {
+        Connection connection = ConnectionFactory.getConnection();
+        try {
+            User owner = requireActiveOwner(connection);
+            List<User> safeUsers = new ArrayList<User>();
+            for (User user : userDAO.findAllStaff(connection, owner.getShopId())) {
                 safeUsers.add(user.withoutPasswordHash());
             }
             return safeUsers;
+        } finally {
+            DbUtil.closeQuietly(connection);
         }
     }
 
-    /**
-     * Creates a new account. Always a Staff account: the owner cannot create
-     * another owner.
-     */
+    /** Adds a Staff account to the owner's shop. */
     public User createStaffAccount(String firstName, String middleName, String lastName, String username,
             String password, String confirmPassword) throws ServiceException, SQLException {
         SessionContext.requireAdmin();
-        PersonName name = requireName(firstName, middleName, lastName);
+        String[] name = requireName(firstName, middleName, lastName);
         String cleanUsername = requireUsername(username);
         requireNewPassword(password, confirmPassword);
         String hash = PasswordHasher.hash(password);
 
-        return saveWithUniqueUsername(() -> TransactionHelper.inTransaction(connection -> {
-            requireActiveOwner(connection);
+        Connection connection = null;
+        try {
+            connection = ConnectionFactory.getConnection();
+            connection.setAutoCommit(false);
+            User owner = requireActiveOwner(connection);
             requireUsernameAvailable(connection, cleanUsername, 0);
-            int id = userDAO.insert(connection, name.first, name.middle, name.last, cleanUsername, hash, Role.STAFF);
-            return userDAO.findById(connection, id).withoutPasswordHash();
-        }));
+            int id = userDAO.insert(connection, owner.getShopId(), name[0], name[1], name[2], cleanUsername, hash,
+                    Role.STAFF);
+            User saved = userDAO.findById(connection, id);
+            connection.commit();
+            return saved.withoutPasswordHash();
+        } catch (SQLException e) {
+            DbUtil.rollbackQuietly(connection);
+            if (DbUtil.isDuplicateKey(e)) {
+                throw new ServiceException("That username is already taken.");
+            }
+            throw e;
+        } catch (ServiceException e) {
+            DbUtil.rollbackQuietly(connection);
+            throw e;
+        } finally {
+            DbUtil.closeQuietly(connection);
+        }
     }
 
-    /**
-     * Updates an account's name and username. The role never changes here, so
-     * a staff account can never be turned into an owner. A non-empty
-     * newPassword also resets that account's password in the same transaction.
-     *
-     * @param userId account to update
-     * @param firstName first name
-     * @param middleName middle name (optional, blank = none)
-     * @param lastName last name
-     * @param username login name
-     * @param newPassword new password, or blank to keep the current one
-     * @param confirmPassword must match newPassword
-     * @return the saved account (without its password hash)
-     * @throws com.laundrylink.service.ServiceException when a rule or validation fails
-     * @throws java.sql.SQLException when the database cannot be reached
-     */
+    /** Updates a staff member's name and username, and resets the password if one is typed. */
     public User updateAccount(int userId, String firstName, String middleName, String lastName, String username,
             String newPassword, String confirmPassword) throws ServiceException, SQLException {
         SessionContext.requireAdmin();
-        PersonName name = requireName(firstName, middleName, lastName);
+        String[] name = requireName(firstName, middleName, lastName);
         String cleanUsername = requireUsername(username);
-        boolean resetPassword = (newPassword != null && !newPassword.isEmpty())
-                || (confirmPassword != null && !confirmPassword.isEmpty());
-        String hash = null;
+        boolean resetPassword = !isBlank(newPassword) || !isBlank(confirmPassword);
+        String newHash = null;
         if (resetPassword) {
             requireNewPassword(newPassword, confirmPassword);
-            hash = PasswordHasher.hash(newPassword);
+            newHash = PasswordHasher.hash(newPassword);
         }
-        String newHash = hash;
 
-        return saveWithUniqueUsername(() -> TransactionHelper.inTransaction(connection -> {
-            requireActiveOwner(connection);
-            User target = requireStaffAccount(connection, userId);
+        Connection connection = null;
+        try {
+            connection = ConnectionFactory.getConnection();
+            connection.setAutoCommit(false);
+            User owner = requireActiveOwner(connection);
+            User target = requireStaffAccount(connection, owner, userId);
             requireUsernameAvailable(connection, cleanUsername, userId);
-
-            userDAO.update(connection, userId, name.first, name.middle, name.last, cleanUsername, target.getRole());
+            userDAO.update(connection, userId, name[0], name[1], name[2], cleanUsername, target.getRole());
             if (newHash != null) {
                 userDAO.updatePassword(connection, userId, newHash);
             }
-            return userDAO.findById(connection, userId).withoutPasswordHash();
-        }));
+            User saved = userDAO.findById(connection, userId);
+            connection.commit();
+            return saved.withoutPasswordHash();
+        } catch (SQLException e) {
+            DbUtil.rollbackQuietly(connection);
+            if (DbUtil.isDuplicateKey(e)) {
+                throw new ServiceException("That username is already taken.");
+            }
+            throw e;
+        } catch (ServiceException e) {
+            DbUtil.rollbackQuietly(connection);
+            throw e;
+        } finally {
+            DbUtil.closeQuietly(connection);
+        }
     }
 
-    /**
-     * Activates or deactivates an account. Accounts are never deleted, and the
-     * owner account can never be deactivated.
-     *
-     * @param userId account to change
-     * @param active true to allow login, false to block it
-     * @throws com.laundrylink.service.ServiceException when a rule fails
-     * @throws java.sql.SQLException when the database cannot be reached
-     */
+    /** Turns a staff login on or off. Accounts are never deleted. */
     public void setAccountActive(int userId, boolean active) throws ServiceException, SQLException {
         SessionContext.requireAdmin();
-        TransactionHelper.inTransaction(connection -> {
-            requireActiveOwner(connection);
-            requireStaffAccount(connection, userId);
+        Connection connection = null;
+        try {
+            connection = ConnectionFactory.getConnection();
+            connection.setAutoCommit(false);
+            User owner = requireActiveOwner(connection);
+            requireStaffAccount(connection, owner, userId);
             userDAO.updateActive(connection, userId, active);
-            return null;
-        });
+            connection.commit();
+        } catch (SQLException e) {
+            DbUtil.rollbackQuietly(connection);
+            throw e;
+        } catch (ServiceException e) {
+            DbUtil.rollbackQuietly(connection);
+            throw e;
+        } finally {
+            DbUtil.closeQuietly(connection);
+        }
     }
 
-    // ------------------------------------------------------------------
-    // My Profile (any logged-in user, own account only)
-    // ------------------------------------------------------------------
+    // ---- My Profile ----
 
+    /** Saves the user's own name and username. */
     public User updateOwnProfile(String firstName, String middleName, String lastName, String username)
             throws ServiceException, SQLException {
         int currentUserId = SessionContext.getCurrentUserId();
-        PersonName name = requireName(firstName, middleName, lastName);
+        String[] name = requireName(firstName, middleName, lastName);
         String cleanUsername = requireUsername(username);
 
-        return saveWithUniqueUsername(() -> TransactionHelper.inTransaction(connection -> {
+        Connection connection = null;
+        try {
+            connection = ConnectionFactory.getConnection();
+            connection.setAutoCommit(false);
             User me = requireActiveSelf(connection, currentUserId);
             requireUsernameAvailable(connection, cleanUsername, me.getId());
-            userDAO.update(connection, me.getId(), name.first, name.middle, name.last, cleanUsername, me.getRole());
-            return userDAO.findById(connection, me.getId()).withoutPasswordHash();
-        }));
+            userDAO.update(connection, me.getId(), name[0], name[1], name[2], cleanUsername, me.getRole());
+            User saved = userDAO.findById(connection, me.getId());
+            connection.commit();
+            return saved.withoutPasswordHash();
+        } catch (SQLException e) {
+            DbUtil.rollbackQuietly(connection);
+            if (DbUtil.isDuplicateKey(e)) {
+                throw new ServiceException("That username is already taken.");
+            }
+            throw e;
+        } catch (ServiceException e) {
+            DbUtil.rollbackQuietly(connection);
+            throw e;
+        } finally {
+            DbUtil.closeQuietly(connection);
+        }
     }
 
+    /** Changes the user's password after checking the current one. */
     public void changeOwnPassword(String currentPassword, String newPassword, String confirmPassword)
             throws ServiceException, SQLException {
         int currentUserId = SessionContext.getCurrentUserId();
-        if (currentPassword == null || currentPassword.isEmpty()) {
+        if (isBlank(currentPassword)) {
             throw new ServiceException("Enter your current password.");
         }
         requireNewPassword(newPassword, confirmPassword);
@@ -192,20 +232,30 @@ public class AccountService {
         }
         String newHash = PasswordHasher.hash(newPassword);
 
-        TransactionHelper.inTransaction(connection -> {
+        Connection connection = null;
+        try {
+            connection = ConnectionFactory.getConnection();
+            connection.setAutoCommit(false);
             User me = requireActiveSelf(connection, currentUserId);
             if (!PasswordHasher.verify(currentPassword, me.getPasswordHash())) {
                 throw new ServiceException("Your current password is incorrect.");
             }
             userDAO.updatePassword(connection, me.getId(), newHash);
-            return null;
-        });
+            connection.commit();
+        } catch (SQLException e) {
+            DbUtil.rollbackQuietly(connection);
+            throw e;
+        } catch (ServiceException e) {
+            DbUtil.rollbackQuietly(connection);
+            throw e;
+        } finally {
+            DbUtil.closeQuietly(connection);
+        }
     }
 
-    // ------------------------------------------------------------------
-    // Rule helpers
-    // ------------------------------------------------------------------
+    // ---- Rule helpers ----
 
+    /** Re-checks that the current user is still an active owner. */
     private User requireActiveOwner(Connection connection) throws ServiceException, SQLException {
         int actorId = SessionContext.requireAdmin().getId();
         User actor = userDAO.findById(connection, actorId);
@@ -215,6 +265,7 @@ public class AccountService {
         return actor;
     }
 
+    /** Re-checks that the current user's account is still active. */
     private User requireActiveSelf(Connection connection, int userId) throws ServiceException, SQLException {
         User me = userDAO.findById(connection, userId);
         if (me == null || !me.isActive()) {
@@ -223,10 +274,11 @@ public class AccountService {
         return me;
     }
 
-    /** Staff Accounts may only change staff; the owner account is edited in My Profile and never deactivated. */
-    private User requireStaffAccount(Connection connection, int userId) throws ServiceException, SQLException {
+    /** Makes sure the account is staff in the owner's shop. */
+    private User requireStaffAccount(Connection connection, User owner, int userId)
+            throws ServiceException, SQLException {
         User user = userDAO.findById(connection, userId);
-        if (user == null) {
+        if (user == null || user.getShopId() != owner.getShopId()) {
             throw new ServiceException("That account no longer exists. Refresh the list and try again.");
         }
         if (user.isAdmin()) {
@@ -235,6 +287,7 @@ public class AccountService {
         return user;
     }
 
+    /** Fails if another account already has this username. */
     private void requireUsernameAvailable(Connection connection, String username, int excludeUserId)
             throws ServiceException, SQLException {
         if (userDAO.usernameExists(connection, username, excludeUserId)) {
@@ -242,36 +295,10 @@ public class AccountService {
         }
     }
 
-    /** Turns a duplicate-key race on the unique username into a readable message. */
-    private <T> T saveWithUniqueUsername(SaveAction<T> action) throws ServiceException, SQLException {
-        try {
-            return action.run();
-        } catch (SQLException e) {
-            if (e.getSQLState() != null && e.getSQLState().startsWith("23")) {
-                throw new ServiceException("That username is already taken.");
-            }
-            throw e;
-        }
-    }
+    // ---- Input checks ----
 
-    private interface SaveAction<T> {
-        T run() throws ServiceException, SQLException;
-    }
-
-    /** First, middle (optional, null when blank) and last name after trimming. */
-    static final class PersonName {
-        final String first;
-        final String middle;
-        final String last;
-
-        private PersonName(String first, String middle, String last) {
-            this.first = first;
-            this.middle = middle;
-            this.last = last;
-        }
-    }
-
-    static PersonName requireName(String firstName, String middleName, String lastName) throws ServiceException {
+    /** Returns {first, middle, last}, trimmed; middle is null if blank. */
+    static String[] requireName(String firstName, String middleName, String lastName) throws ServiceException {
         String first = cleanNamePart(firstName, "First name");
         String middle = cleanNamePart(middleName, "Middle name");
         String last = cleanNamePart(lastName, "Last name");
@@ -281,25 +308,55 @@ public class AccountService {
         if (last.isEmpty()) {
             throw new ServiceException("Enter a last name.");
         }
-        return new PersonName(first, middle.isEmpty() ? null : middle, last);
+        String[] name = new String[3];
+        name[0] = first;
+        name[1] = middle.isEmpty() ? null : middle;
+        name[2] = last;
+        return name;
     }
 
+    /** Trims a name part and checks its length. */
     private static String cleanNamePart(String value, String label) throws ServiceException {
-        String clean = value == null ? "" : value.trim().replaceAll("\\s+", " ");
+        String clean = collapseSpaces(value);
         if (clean.length() > MAX_NAME_PART_LENGTH) {
             throw new ServiceException(label + " must be at most " + MAX_NAME_PART_LENGTH + " characters.");
         }
         return clean;
     }
 
+    /** Trims the shop name and checks it's filled in and not too long. */
+    static String requireShopName(String shopName) throws ServiceException {
+        String clean = collapseSpaces(shopName);
+        if (clean.isEmpty()) {
+            throw new ServiceException("Enter your shop name.");
+        }
+        if (clean.length() > MAX_SHOP_NAME_LENGTH) {
+            throw new ServiceException("Shop name must be at most " + MAX_SHOP_NAME_LENGTH + " characters.");
+        }
+        return clean;
+    }
+
+    /** Username: 3-30 letters, numbers, dots or underscores. */
     static String requireUsername(String username) throws ServiceException {
         String clean = username == null ? "" : username.trim();
-        if (!USERNAME_PATTERN.matcher(clean).matches()) {
+        boolean valid = clean.length() >= MIN_USERNAME_LENGTH && clean.length() <= MAX_USERNAME_LENGTH;
+        int i = 0;
+        while (valid && i < clean.length()) {
+            char c = clean.charAt(i);
+            boolean allowed = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
+                    || c == '.' || c == '_';
+            if (!allowed) {
+                valid = false;
+            }
+            i++;
+        }
+        if (!valid) {
             throw new ServiceException("Username must be 3-30 characters using letters, numbers, dots, or underscores.");
         }
         return clean;
     }
 
+    /** Checks the password length and that both entries match. */
     static void requireNewPassword(String password, String confirmPassword) throws ServiceException {
         if (password == null || password.length() < MIN_PASSWORD_LENGTH) {
             throw new ServiceException("Password must be at least " + MIN_PASSWORD_LENGTH + " characters.");
@@ -310,5 +367,31 @@ public class AccountService {
         if (!password.equals(confirmPassword)) {
             throw new ServiceException("The passwords do not match.");
         }
+    }
+
+    /** True if the text is null or empty. */
+    private static boolean isBlank(String text) {
+        return text == null || text.isEmpty();
+    }
+
+    /** Trims the text and squeezes repeated spaces into one. */
+    private static String collapseSpaces(String value) {
+        if (value == null) {
+            return "";
+        }
+        String trimmed = value.trim();
+        StringBuilder result = new StringBuilder();
+        boolean lastWasSpace = false;
+        for (int i = 0; i < trimmed.length(); i++) {
+            char c = trimmed.charAt(i);
+            boolean isSpace = Character.isWhitespace(c);
+            if (isSpace && !lastWasSpace) {
+                result.append(' ');
+            } else if (!isSpace) {
+                result.append(c);
+            }
+            lastWasSpace = isSpace;
+        }
+        return result.toString();
     }
 }

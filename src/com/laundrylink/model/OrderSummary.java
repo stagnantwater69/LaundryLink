@@ -3,12 +3,15 @@ package com.laundrylink.model;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import com.laundrylink.util.MoneyFormat;
 
 /**
- * One order as listed on the dashboard: totals and payment figures derived
- * from v_order_balances.
+ * One order as shown in lists, with payment totals from v_order_balances.
  */
 public class OrderSummary {
+
+    private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("MMM d, yyyy");
 
     private final int id;
     private final String orderNumber;
@@ -23,6 +26,7 @@ public class OrderSummary {
     private final String customerPhone;
     private final LocalDate dueDate;
 
+    /** Summary without the phone and due date. */
     public OrderSummary(int id, String orderNumber, String customerName, String services, LocalDateTime receivedAt,
             OrderStatus status, BigDecimal totalAmount, BigDecimal amountPaid, BigDecimal balance,
             PaymentStatus paymentStatus) {
@@ -30,6 +34,7 @@ public class OrderSummary {
                 paymentStatus, null, null);
     }
 
+    /** Full summary. */
     public OrderSummary(int id, String orderNumber, String customerName, String services, LocalDateTime receivedAt,
             OrderStatus status, BigDecimal totalAmount, BigDecimal amountPaid, BigDecimal balance,
             PaymentStatus paymentStatus, String customerPhone, LocalDate dueDate) {
@@ -47,13 +52,13 @@ public class OrderSummary {
         this.dueDate = dueDate;
     }
 
-    /** Past its expected completion date and not yet handed over or cancelled. */
+    /** Past its due date and not yet released or cancelled. */
     public boolean isOverdue(LocalDate today) {
         return dueDate != null && dueDate.isBefore(today)
                 && status != OrderStatus.RELEASED && status != OrderStatus.CANCELLED;
     }
 
-    /** Release rule: ready for pickup and fully paid. */
+    /** Can be released: ready for pickup and fully paid. */
     public boolean isReleasable() {
         return status == OrderStatus.READY_FOR_PICKUP && balance.signum() == 0;
     }
@@ -98,13 +103,35 @@ public class OrderSummary {
         return paymentStatus;
     }
 
-    /** Customer contact number, or null when not recorded. */
+    /** Customer's phone, or null. */
     public String getCustomerPhone() {
         return customerPhone;
     }
 
-    /** Expected completion date, or null when not set. */
+    /** Due date, or null. */
     public LocalDate getDueDate() {
         return dueDate;
+    }
+
+    // ---- Text used by the table columns ----
+
+    /** Due date like "Oct 2, 2026", or a dash if not set. */
+    public String getDueDateText() {
+        return dueDate == null ? "\u2014" : dueDate.format(DATE);
+    }
+
+    /** Total as "PHP 1,234.00". */
+    public String getTotalText() {
+        return MoneyFormat.php(totalAmount);
+    }
+
+    /** Laundry stage name, e.g. "Washing". */
+    public String getStatusText() {
+        return status.getDisplayName();
+    }
+
+    /** Payment status name, e.g. "Partial". */
+    public String getPaymentText() {
+        return paymentStatus.getDisplayName();
     }
 }

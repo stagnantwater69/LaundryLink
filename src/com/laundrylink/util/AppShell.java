@@ -1,36 +1,44 @@
 package com.laundrylink.util;
 
-import java.util.function.Consumer;
-import javafx.beans.property.ReadOnlyStringProperty;
-import javafx.beans.property.ReadOnlyStringWrapper;
+import com.laundrylink.controller.MainShellController;
+import javafx.scene.control.Label;
 
 /**
- * Lets module screens talk to the main window without knowing its controller:
- * open another tab, or show a message in the bottom status bar.
+ * Lets any screen switch tabs or show a status message in the main window.
  */
 public final class AppShell {
 
-    private static final ReadOnlyStringWrapper STATUS = new ReadOnlyStringWrapper("Ready.");
-    private static Consumer<View> tabOpener = view -> { };
+    // The main window and its status label, saved when it opens.
+    private static MainShellController shell;
+    private static Label statusLabel;
 
     private AppShell() {
     }
 
-    /** Called by the main shell when it is shown. */
-    public static void setTabOpener(Consumer<View> opener) {
-        tabOpener = opener;
+    /** Called once by the main window so other screens can reach it. */
+    public static void setShell(MainShellController mainShell, Label bottomStatusLabel) {
+        shell = mainShell;
+        statusLabel = bottomStatusLabel;
     }
 
-    /** Switches the main window to the tab showing this view. */
+    /** Switches to the tab that shows this view. */
     public static void openTab(View view) {
-        tabOpener.accept(view);
+        if (shell != null) {
+            shell.showTab(view);
+        }
     }
 
+    /** Updates the name at the top right after a profile edit. */
+    public static void refreshUserBadge() {
+        if (shell != null) {
+            shell.showUserBadge();
+        }
+    }
+
+    /** Shows a message in the bottom status bar. */
     public static void setStatus(String message) {
-        STATUS.set(message);
-    }
-
-    public static ReadOnlyStringProperty statusProperty() {
-        return STATUS.getReadOnlyProperty();
+        if (statusLabel != null) {
+            statusLabel.setText(message);
+        }
     }
 }

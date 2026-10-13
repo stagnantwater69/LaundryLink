@@ -6,20 +6,20 @@ import com.laundrylink.model.OrderStatus;
 import com.laundrylink.model.OrderSummary;
 import com.laundrylink.service.DashboardService;
 import com.laundrylink.service.OrderService;
+import com.laundrylink.service.ServiceException;
 import com.laundrylink.util.AppShell;
 import com.laundrylink.util.BackgroundTask;
 import com.laundrylink.util.Dialogs;
 import com.laundrylink.util.MoneyFormat;
 import com.laundrylink.util.View;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
-import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -28,12 +28,12 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.util.StringConverter;
 
 /**
- * Daily dashboard: selected-day totals, current workload, recent orders,
- * and the selected order's details.
+ * Dashboard tab: the day's totals, current workload, recent orders and order details.
  */
 public class DashboardController {
 
@@ -41,165 +41,118 @@ public class DashboardController {
     private static final DateTimeFormatter LONG_DATE = DateTimeFormatter.ofPattern("MMMM d, yyyy");
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("h:mm a");
 
-    @FXML
-    private DatePicker datePicker;
-    @FXML
-    private Label ordersReceivedLabel;
-    @FXML
-    private Label paymentsCollectedLabel;
-    @FXML
-    private Label readyForPickupLabel;
-    @FXML
-    private Label releasedLabel;
-    @FXML
-    private Label outstandingBalanceLabel;
-    @FXML
-    private TextField searchField;
-    @FXML
-    private ComboBox<String> statusFilterComboBox;
-    @FXML
-    private TableView<OrderSummary> ordersTable;
-    @FXML
-    private TableColumn<OrderSummary, String> orderNumberColumn;
-    @FXML
-    private TableColumn<OrderSummary, String> customerColumn;
-    @FXML
-    private TableColumn<OrderSummary, String> serviceColumn;
-    @FXML
-    private TableColumn<OrderSummary, String> totalColumn;
-    @FXML
-    private TableColumn<OrderSummary, String> statusColumn;
-    @FXML
-    private TableColumn<OrderSummary, String> paymentColumn;
-    @FXML
-    private Label ordersPlaceholderLabel;
-    @FXML
-    private Label detailOrderNumberLabel;
-    @FXML
-    private Label detailCustomerLabel;
-    @FXML
-    private Label detailServiceLabel;
-    @FXML
-    private Label detailQuantityLabel;
-    @FXML
-    private Label detailTotalLabel;
-    @FXML
-    private Label detailPaidLabel;
-    @FXML
-    private Label detailBalanceLabel;
-    @FXML
-    private Button recordPaymentButton;
-    @FXML
-    private Button viewOrderButton;
-    @FXML
-    private Button releaseOrderButton;
-    @FXML
-    private HBox releaseMessageBox;
-    @FXML
-    private Label releaseMessageLabel;
-    @FXML
-    private Label flowReceivedLabel;
-    @FXML
-    private Label flowWashingLabel;
-    @FXML
-    private Label flowProcessingLabel;
-    @FXML
-    private Label flowDryingLabel;
-    @FXML
-    private Label flowReadyLabel;
+    @FXML private DatePicker datePicker;
+    @FXML private Label ordersReceivedLabel;
+    @FXML private Label paymentsCollectedLabel;
+    @FXML private Label readyForPickupLabel;
+    @FXML private Label releasedLabel;
+    @FXML private Label outstandingBalanceLabel;
+    @FXML private TextField searchField;
+    @FXML private ComboBox<String> statusFilterComboBox;
+    @FXML private TableView<OrderSummary> ordersTable;
+    @FXML private TableColumn<OrderSummary, String> orderNumberColumn;
+    @FXML private TableColumn<OrderSummary, String> customerColumn;
+    @FXML private TableColumn<OrderSummary, String> serviceColumn;
+    @FXML private TableColumn<OrderSummary, String> totalColumn;
+    @FXML private TableColumn<OrderSummary, String> statusColumn;
+    @FXML private TableColumn<OrderSummary, String> paymentColumn;
+    @FXML private Label ordersPlaceholderLabel;
+    @FXML private Label detailOrderNumberLabel;
+    @FXML private Label detailCustomerLabel;
+    @FXML private Label detailServiceLabel;
+    @FXML private Label detailQuantityLabel;
+    @FXML private Label detailTotalLabel;
+    @FXML private Label detailPaidLabel;
+    @FXML private Label detailBalanceLabel;
+    @FXML private Button recordPaymentButton;
+    @FXML private Button viewOrderButton;
+    @FXML private Button releaseOrderButton;
+    @FXML private HBox releaseMessageBox;
+    @FXML private Label releaseMessageLabel;
+    @FXML private Label flowReceivedLabel;
+    @FXML private Label flowWashingLabel;
+    @FXML private Label flowProcessingLabel;
+    @FXML private Label flowDryingLabel;
+    @FXML private Label flowReadyLabel;
 
     private final DashboardService dashboardService = new DashboardService();
     private final OrderService orderService = new OrderService();
-    private final ObservableList<OrderSummary> orders = FXCollections.observableArrayList();
-    private final FilteredList<OrderSummary> filteredOrders = new FilteredList<>(orders, order -> true);
 
+    // All recent orders; the table only shows the ones that match the filters.
+    private List<OrderSummary> allOrders = new ArrayList<OrderSummary>();
     private DashboardStats currentStats;
 
+    /** Sets up the date, filter and table, then loads today's data. */
     @FXML
     private void initialize() {
-        datePicker.setConverter(new StringConverter<LocalDate>() {
-            @Override
-            public String toString(LocalDate date) {
-                return date == null ? "" : date.format(LONG_DATE);
-            }
-
-            @Override
-            public LocalDate fromString(String text) {
-                return text == null || text.trim().isEmpty() ? null : LocalDate.parse(text.trim(), LONG_DATE);
-            }
-        });
+        datePicker.setConverter(new LongDateConverter());
         datePicker.setValue(DashboardService.today());
-        datePicker.valueProperty().addListener((obs, oldDate, newDate) -> loadStats());
 
-        List<String> statusOptions = new ArrayList<>();
+        List<String> statusOptions = new ArrayList<String>();
         statusOptions.add(ALL_STATUSES);
         for (OrderStatus status : OrderStatus.values()) {
             statusOptions.add(status.getDisplayName());
         }
         statusFilterComboBox.setItems(FXCollections.observableArrayList(statusOptions));
         statusFilterComboBox.setValue(ALL_STATUSES);
-        statusFilterComboBox.valueProperty().addListener((obs, oldValue, newValue) -> applyFilter());
-        searchField.textProperty().addListener((obs, oldText, newText) -> applyFilter());
 
-        setUpTable();
+        orderNumberColumn.setCellValueFactory(new PropertyValueFactory<OrderSummary, String>("orderNumber"));
+        customerColumn.setCellValueFactory(new PropertyValueFactory<OrderSummary, String>("customerName"));
+        serviceColumn.setCellValueFactory(new PropertyValueFactory<OrderSummary, String>("services"));
+        totalColumn.setCellValueFactory(new PropertyValueFactory<OrderSummary, String>("totalText"));
+        statusColumn.setCellValueFactory(new PropertyValueFactory<OrderSummary, String>("statusText"));
+        paymentColumn.setCellValueFactory(new PropertyValueFactory<OrderSummary, String>("paymentText"));
+
         showDetails(null);
         refreshAll(-1);
     }
 
-    private void setUpTable() {
-        ordersTable.setItems(filteredOrders);
-        orderNumberColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue().getOrderNumber()));
-        customerColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue().getCustomerName()));
-        serviceColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue().getServices()));
-        totalColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(MoneyFormat.php(cell.getValue().getTotalAmount())));
-        statusColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(cell.getValue().getStatus().getDisplayName()));
-        paymentColumn.setCellValueFactory(cell ->
-                new ReadOnlyStringWrapper(cell.getValue().getPaymentStatus().getDisplayName()));
-        ordersTable.getSelectionModel().selectedItemProperty()
-                .addListener((obs, oldOrder, newOrder) -> showDetails(newOrder));
-    }
+    // ---- Loading ----
 
-    // ------------------------------------------------------------------
-    // Loading
-    // ------------------------------------------------------------------
-
-    /** Reloads figures and the order list; re-selects the given order if it is still listed. */
+    /** Reloads everything, then re-selects the given order if it's still listed. */
     private void refreshAll(int selectOrderId) {
         loadStats();
         loadOrders(selectOrderId);
     }
 
+    /** Another date was picked. */
+    @FXML
+    private void handleDateChanged() {
+        loadStats();
+    }
+
+    /** Loads the totals for the picked date. */
     private void loadStats() {
-        LocalDate day = datePicker.getValue();
+        final LocalDate day = datePicker.getValue();
         AppShell.setStatus("Loading dashboard...");
-        BackgroundTask.run(() -> dashboardService.loadStats(day),
-                stats -> {
-                    currentStats = stats;
-                    showStats(stats);
-                    AppShell.setStatus("Ready.  Figures for " + day.format(LONG_DATE)
-                            + ", updated " + LocalTime.now(DashboardService.SHOP_ZONE).format(TIME) + ".");
-                },
-                error -> {
-                    AppShell.setStatus("Could not load dashboard figures.");
-                    Dialogs.error("Cannot load dashboard", error);
-                });
+        BackgroundTask.run(() -> dashboardService.loadStats(day), stats -> {
+            if (!day.equals(datePicker.getValue())) {
+                return;     // the user picked another date meanwhile
+            }
+            currentStats = stats;
+            showStats(stats);
+            AppShell.setStatus("Ready.  Figures for " + day.format(LONG_DATE)
+                    + ", updated " + LocalTime.now(DashboardService.SHOP_ZONE).format(TIME) + ".");
+        }, error -> {
+            AppShell.setStatus("Could not load dashboard figures.");
+            Dialogs.error("Cannot load dashboard", error);
+        });
     }
 
-    private void loadOrders(int selectOrderId) {
+    /** Loads recent orders and shows the ones that match the filter. */
+    private void loadOrders(final int selectOrderId) {
         ordersPlaceholderLabel.setText("Loading orders...");
-        BackgroundTask.run(dashboardService::loadRecentOrders,
-                (List<OrderSummary> loaded) -> {
-                    ordersPlaceholderLabel.setText("No orders yet.");
-                    orders.setAll(loaded);
-                    applyFilter();
-                    selectOrder(selectOrderId);
-                },
-                error -> {
-                    ordersPlaceholderLabel.setText("Orders could not be loaded.");
-                    Dialogs.error("Cannot load orders", error);
-                });
+        BackgroundTask.run(() -> dashboardService.loadRecentOrders(), loaded -> {
+            allOrders = loaded;
+            applyFilter();
+            selectOrder(selectOrderId);
+        }, error -> {
+            ordersPlaceholderLabel.setText("Orders could not be loaded.");
+            Dialogs.error("Cannot load orders", error);
+        });
     }
 
+    /** Puts the day's figures and workload counts on the cards. */
     private void showStats(DashboardStats stats) {
         ordersReceivedLabel.setText(String.valueOf(stats.getOrdersReceived()));
         paymentsCollectedLabel.setText(MoneyFormat.php(stats.getPaymentsCollected()));
@@ -215,58 +168,78 @@ public class DashboardController {
         flowProcessingLabel.setText(processing + (processing == 1 ? " order" : " orders"));
     }
 
-    // ------------------------------------------------------------------
-    // Recent orders
-    // ------------------------------------------------------------------
+    // ---- Recent orders ----
 
+    /** Search text or status filter changed. */
+    @FXML
+    private void handleFilter() {
+        applyFilter();
+    }
+
+    /** Shows only the orders that match the search and filter. */
     private void applyFilter() {
         String query = searchField.getText() == null ? "" : searchField.getText().trim().toLowerCase();
         String statusName = statusFilterComboBox.getValue();
-        filteredOrders.setPredicate(order -> {
+
+        List<OrderSummary> shown = new ArrayList<OrderSummary>();
+        for (OrderSummary order : allOrders) {
             boolean statusMatches = statusName == null || ALL_STATUSES.equals(statusName)
-                    || order.getStatus().getDisplayName().equals(statusName);
+                    || order.getStatusText().equals(statusName);
             boolean textMatches = query.isEmpty()
                     || order.getOrderNumber().toLowerCase().contains(query)
                     || containsAllWords(order.getCustomerName(), query);
-            return statusMatches && textMatches;
-        });
-        if (filteredOrders.isEmpty() && !orders.isEmpty()) {
-            ordersPlaceholderLabel.setText("No orders match your search.");
-        } else if (orders.isEmpty()) {
+            if (statusMatches && textMatches) {
+                shown.add(order);
+            }
+        }
+        ordersTable.setItems(FXCollections.observableArrayList(shown));
+
+        if (allOrders.isEmpty()) {
             ordersPlaceholderLabel.setText("No orders yet.");
+        } else if (shown.isEmpty()) {
+            ordersPlaceholderLabel.setText("No orders match your search.");
         }
     }
 
-    /** True when every word of the query appears in the name, so "maria santos" finds "Maria Lopez Santos". */
+    /** True if every word of the query is in the name ("maria santos" finds "Maria Lopez Santos"). */
     private static boolean containsAllWords(String name, String query) {
         String lowerName = name.toLowerCase();
-        for (String word : query.split("\\s+")) {
-            if (!lowerName.contains(word)) {
+        String[] words = query.split(" ");
+        for (String word : words) {
+            if (!word.isEmpty() && !lowerName.contains(word)) {
                 return false;
             }
         }
         return true;
     }
 
+    /** Selects this order, or the first one if it isn't listed. */
     private void selectOrder(int orderId) {
-        for (OrderSummary order : filteredOrders) {
+        for (OrderSummary order : ordersTable.getItems()) {
             if (order.getId() == orderId) {
                 ordersTable.getSelectionModel().select(order);
                 ordersTable.scrollTo(order);
+                showDetails(order);
                 return;
             }
         }
-        if (!filteredOrders.isEmpty()) {
-            ordersTable.getSelectionModel().selectFirst();
-        } else {
+        if (ordersTable.getItems().isEmpty()) {
             showDetails(null);
+        } else {
+            ordersTable.getSelectionModel().selectFirst();
+            showDetails(ordersTable.getSelectionModel().getSelectedItem());
         }
     }
 
-    // ------------------------------------------------------------------
-    // Order details
-    // ------------------------------------------------------------------
+    /** A row in the order list was picked. */
+    @FXML
+    private void handleOrderSelected() {
+        showDetails(ordersTable.getSelectionModel().getSelectedItem());
+    }
 
+    // ---- Order details ----
+
+    /** Fills the order panel, or clears it when order is null. */
     private void showDetails(OrderSummary order) {
         if (order == null) {
             detailOrderNumberLabel.setText("—");
@@ -286,7 +259,6 @@ public class DashboardController {
         detailOrderNumberLabel.setText(order.getOrderNumber());
         detailCustomerLabel.setText(order.getCustomerName());
         detailServiceLabel.setText(order.getServices().isEmpty() ? "—" : order.getServices());
-        detailQuantityLabel.setText("Loading...");
         detailTotalLabel.setText(MoneyFormat.php(order.getTotalAmount()));
         detailPaidLabel.setText(MoneyFormat.php(order.getAmountPaid()));
         detailBalanceLabel.setText(MoneyFormat.php(order.getBalance()));
@@ -297,17 +269,18 @@ public class DashboardController {
         releaseOrderButton.setDisable(!order.isReleasable());
         showReleaseMessage(releaseBlockReason(order));
 
-        int orderId = order.getId();
-        BackgroundTask.run(() -> dashboardService.loadOrderItems(orderId),
-                (List<OrderItemLine> items) -> {
-                    OrderSummary selected = ordersTable.getSelectionModel().getSelectedItem();
-                    if (selected != null && selected.getId() == orderId) {
-                        showItems(items);
-                    }
-                },
-                error -> detailQuantityLabel.setText("Could not load items."));
+        // Load the items in the background; skip them if another order was picked meanwhile.
+        final int orderId = order.getId();
+        detailQuantityLabel.setText("Loading...");
+        BackgroundTask.run(() -> dashboardService.loadOrderItems(orderId), items -> {
+            OrderSummary selected = ordersTable.getSelectionModel().getSelectedItem();
+            if (selected != null && selected.getId() == orderId) {
+                showItems(items);
+            }
+        }, error -> detailQuantityLabel.setText("Could not load items."));
     }
 
+    /** Shows each item as "4 kg x PHP 65.00", one per line. */
     private void showItems(List<OrderItemLine> items) {
         if (items.isEmpty()) {
             detailQuantityLabel.setText("No items");
@@ -326,21 +299,23 @@ public class DashboardController {
         detailQuantityLabel.setText(lines.toString());
     }
 
-    /** Why the selected order cannot be released yet, or null when there is nothing to warn about. */
+    /** Why the order can't be released yet, or null if it can. */
     private String releaseBlockReason(OrderSummary order) {
+        boolean unpaid = order.getBalance().signum() > 0;
         switch (order.getStatus()) {
             case RELEASED:
             case CANCELLED:
                 return null;
             case READY_FOR_PICKUP:
-                return order.getBalance().signum() > 0 ? "Full payment required before release." : null;
+                return unpaid ? "Full payment required before release." : null;
             default:
-                return order.getBalance().signum() > 0
+                return unpaid
                         ? "Must be Ready for Pickup and fully paid before release."
                         : "Must be Ready for Pickup before release.";
         }
     }
 
+    /** Shows or hides the red release warning. */
     private void showReleaseMessage(String message) {
         boolean show = message != null;
         releaseMessageLabel.setText(show ? message : "");
@@ -348,10 +323,9 @@ public class DashboardController {
         releaseMessageBox.setManaged(show);
     }
 
-    // ------------------------------------------------------------------
-    // Actions
-    // ------------------------------------------------------------------
+    // ---- Actions ----
 
+    /** View Daily Summary button: shows the day's figures in a pop-up. */
     @FXML
     private void handleViewDailySummary() {
         if (currentStats == null) {
@@ -371,16 +345,24 @@ public class DashboardController {
                 + "Payments collected include payments for orders received on earlier days.");
     }
 
+    /** New Order button: opens the Laundry Orders tab. */
     @FXML
     private void handleNewOrder() {
         AppShell.openTab(View.LAUNDRY_ORDERS);
     }
 
+    /** Record Payment button: opens Payments for the selected order. */
     @FXML
     private void handleRecordPayment() {
-        AppShell.openTab(View.PAYMENTS);
+        OrderSummary order = ordersTable.getSelectionModel().getSelectedItem();
+        if (order == null) {
+            AppShell.openTab(View.PAYMENTS);
+        } else {
+            PaymentsController.openForOrder(order.getId());
+        }
     }
 
+    /** View Order button: opens the selected order in Laundry Orders. */
     @FXML
     private void handleViewOrder() {
         OrderSummary order = ordersTable.getSelectionModel().getSelectedItem();
@@ -391,6 +373,7 @@ public class DashboardController {
         }
     }
 
+    /** Release Order button: hands the order back to the customer. */
     @FXML
     private void handleReleaseOrder() {
         OrderSummary order = ordersTable.getSelectionModel().getSelectedItem();
@@ -399,15 +382,36 @@ public class DashboardController {
             return;
         }
         releaseOrderButton.setDisable(true);
-        BackgroundTask.runVoid(() -> orderService.releaseOrder(order.getId()),
-                () -> {
-                    Dialogs.info("Order released", order.getOrderNumber() + " has been released to "
-                            + order.getCustomerName() + ".");
-                    refreshAll(order.getId());
-                },
-                error -> {
-                    Dialogs.error("Cannot release order", error);
-                    refreshAll(order.getId());
-                });
+        final int orderId = order.getId();
+        BackgroundTask.runVoid(() -> orderService.releaseOrder(orderId), () -> {
+            Dialogs.info("Order released", order.getOrderNumber() + " has been released to "
+                    + order.getCustomerName() + ".");
+            refreshAll(orderId);
+        }, error -> {
+            Dialogs.error("Cannot release order", error);
+            refreshAll(orderId);
+        });
+    }
+
+    /** Shows dates in the date picker as "October 2, 2026". */
+    private static class LongDateConverter extends StringConverter<LocalDate> {
+        /** Date to text. */
+        @Override
+        public String toString(LocalDate date) {
+            return date == null ? "" : date.format(LONG_DATE);
+        }
+
+        /** Text to date (null if it isn't valid). */
+        @Override
+        public LocalDate fromString(String text) {
+            if (text == null || text.trim().isEmpty()) {
+                return null;
+            }
+            try {
+                return LocalDate.parse(text.trim(), LONG_DATE);
+            } catch (DateTimeParseException e) {
+                return null;
+            }
+        }
     }
 }

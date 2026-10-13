@@ -1,0 +1,131 @@
+/* Customers screen. Loaded together with laundrylink.css, which defines the -ll-* colors. */
+
+.dashboard-title.customers-title {
+    -fx-text-fill: -ll-burgundy;
+}
+
+.toolbar-label {
+    -fx-font-size: 1em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ll-ink;
+}
+
+/* Customer list: centered ID / order count and the View / Edit buttons. */
+.table-row-cell .table-cell.center-cell {
+    -fx-alignment: center;
+}
+
+.table-row-cell .table-cell.code-cell {
+    -fx-alignment: center;
+    -fx-font-weight: bold;
+}
+
+.button.row-button {
+    -fx-font-size: 0.857em;
+    -fx-padding: 0.25em 0.643em;
+    -fx-graphic-text-gap: 0.357em;
+}
+
+/* Customer Details card */
+.avatar-frame {
+    -fx-background-color: -ll-outline, -ll-paper;
+    -fx-background-insets: 0, 1.5;
+    -fx-padding: 0.571em;
+}
+
+.details-name {
+    -fx-font-size: 1.429em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ll-burgundy;
+}
+
+.details-hint {
+    -fx-font-size: 0.857em;
+    -fx-font-style: italic;
+    -fx-text-fill: -ll-muted;
+}
+
+/* Vector icons on buttons */
+.icon-add {
+    -fx-fill: #2e7d32;
+}
+
+.icon-save,
+.icon-view {
+    -fx-fill: -ll-teal;
+}
+
+.icon-cancel,
+.icon-delete {
+    -fx-fill: #b3261e;
+}
+
+.icon-edit {
+    -fx-fill: -ll-burgundy;
+}
+
+.icon-on-teal {
+    -fx-fill: #f7f3e3;
+}
+
+.button:disabled .icon-add,
+.button:disabled .icon-save,
+.button:disabled .icon-view,
+.button:disabled .icon-cancel,
+.button:disabled .icon-delete,
+.button:disabled .icon-edit {
+    -fx-fill: -ll-outline;
+}
+
+/* Add / Edit Customer pop-up drawn over the page */
+.modal-overlay {
+    -fx-background-color: rgba(20, 30, 32, 0.35);
+}
+
+.modal-card {
+    -fx-background-color: -ll-teal-dark, -ll-teal, -ll-cream;
+    -fx-background-insets: 0, 2, 5;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.35), 18, 0.2, 0, 4);
+}
+
+.button.close-button {
+    -fx-padding: 0.214em 0.5em;
+    -fx-background-color: #f7f3e3;
+    -fx-background-insets: 0;
+}
+
+.required-mark {
+    -fx-text-fill: #b3261e;
+    -fx-font-weight: bold;
+}
+
+/* Status / payment text in the order history */
+.table-row-cell .table-cell.status-ready {
+    -fx-text-fill: #1f6b3a;
+}
+
+.table-row-cell .table-cell.status-cancelled,
+.table-row-cell .table-cell.status-released {
+    -fx-text-fill: -ll-muted;
+}
+
+.table-row-cell .table-cell.pay-paid {
+    -fx-text-fill: #1d4e89;
+    -fx-font-weight: bold;
+}
+
+.table-row-cell .table-cell.pay-partial {
+    -fx-text-fill: #8a6100;
+    -fx-font-weight: bold;
+}
+
+.table-row-cell .table-cell.pay-unpaid {
+    -fx-text-fill: #9b1c1c;
+    -fx-font-weight: bold;
+}
+
+.form-row-label {
+    -fx-font-size: 1em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ll-ink;
+}

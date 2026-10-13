@@ -13,7 +13,7 @@ import java.time.ZoneId;
 import java.util.List;
 
 /**
- * Daily dashboard figures. Day boundaries use the shop's time zone (Asia/Manila).
+ * Dashboard figures. Days follow Manila time.
  */
 public class DashboardService {
 
@@ -23,31 +23,35 @@ public class DashboardService {
 
     private final DashboardDAO dashboardDAO = new DashboardDAO();
 
+    /** Today's date in Manila time. */
     public static LocalDate today() {
         return LocalDate.now(SHOP_ZONE);
     }
 
+    /** Dashboard figures for one day of the user's shop. */
     public DashboardStats loadStats(LocalDate day) throws ServiceException, SQLException {
-        SessionContext.requireLoggedIn();
+        int shopId = SessionContext.getCurrentShopId();
         if (day == null) {
             throw new ServiceException("Select a date.");
         }
         try (Connection connection = ConnectionFactory.getConnection()) {
-            return dashboardDAO.loadStats(connection, day.atStartOfDay(), day.plusDays(1).atStartOfDay());
+            return dashboardDAO.loadStats(connection, shopId, day.atStartOfDay(), day.plusDays(1).atStartOfDay());
         }
     }
 
+    /** The shop's most recent orders. */
     public List<OrderSummary> loadRecentOrders() throws ServiceException, SQLException {
-        SessionContext.requireLoggedIn();
+        int shopId = SessionContext.getCurrentShopId();
         try (Connection connection = ConnectionFactory.getConnection()) {
-            return dashboardDAO.findRecentOrders(connection, RECENT_ORDER_LIMIT);
+            return dashboardDAO.findRecentOrders(connection, shopId, RECENT_ORDER_LIMIT);
         }
     }
 
+    /** The service lines of one order. */
     public List<OrderItemLine> loadOrderItems(int orderId) throws ServiceException, SQLException {
-        SessionContext.requireLoggedIn();
+        int shopId = SessionContext.getCurrentShopId();
         try (Connection connection = ConnectionFactory.getConnection()) {
-            return dashboardDAO.findOrderItems(connection, orderId);
+            return dashboardDAO.findOrderItems(connection, shopId, orderId);
         }
     }
 }

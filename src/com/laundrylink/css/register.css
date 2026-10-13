@@ -1,0 +1,111 @@
+/* Register Your Shop screen. Used with laundrylink.css, which has the -ll-* colors. */
+
+.register-frame {
+    -fx-background-color: -ll-teal-dark, -ll-cream, -ll-teal, -ll-cream;
+    -fx-background-insets: 0, 2, 5, 6;
+    -fx-padding: 6;
+}
+
+.register-titlebar {
+    -fx-background-color: -ll-teal;
+    -fx-padding: 0.429em 0.857em 0.429em 1.143em;
+}
+
+.register-title {
+    -fx-font-size: 2.286em;
+    -fx-font-weight: bold;
+    -fx-text-fill: #f7f3e3;
+}
+
+.breadcrumb {
+    -fx-background-color: #f7f3e3;
+    -fx-padding: 0.286em 0.857em;
+}
+
+.breadcrumb .hyperlink.crumb-link {
+    -fx-font-size: 1.071em;
+    -fx-text-fill: -ll-teal;
+    -fx-padding: 0;
+    -fx-border-width: 0;
+}
+
+.crumb-current {
+    -fx-font-size: 1.071em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ll-ink;
+}
+
+.crumb-arrow {
+    -fx-font-size: 1.214em;
+    -fx-text-fill: -ll-ink;
+}
+
+.register-subtitle {
+    -fx-font-size: 1.429em;
+    -fx-text-fill: -ll-ink;
+    -fx-padding: 0.286em 1em 0.429em 1em;
+}
+
+.form-panel {
+    -fx-background-color: -ll-outline, -ll-paper;
+    -fx-background-insets: 0, 1.5;
+    -fx-padding: 1em 1.286em;
+}
+
+.register-label {
+    -fx-font-size: 1.071em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ll-ink;
+}
+
+.info-box {
+    -fx-background-color: #7d97a8, #dde8ef;
+    -fx-background-insets: 0, 1.5;
+    -fx-padding: 0.571em 0.857em;
+}
+
+.info-text {
+    -fx-font-size: 0.929em;
+    -fx-text-fill: -ll-ink;
+}
+
+.hyperlink.login-link {
+    -fx-text-fill: -ll-burgundy;
+    -fx-font-weight: bold;
+}
+
+/* Get Started steps */
+.steps-body {
+    -fx-padding: 0.286em 1em;
+}
+
+.step-row {
+    -fx-padding: 0.571em 0;
+}
+
+.step-number {
+    -fx-background-color: -ll-ink, -ll-burgundy;
+    -fx-background-insets: 0, 2;
+    -fx-background-radius: 50em;
+    -fx-min-width: 2.429em;
+    -fx-min-height: 2.429em;
+    -fx-max-width: 2.429em;
+    -fx-max-height: 2.429em;
+}
+
+.step-number .label {
+    -fx-font-size: 1.429em;
+    -fx-font-weight: bold;
+    -fx-text-fill: #f7f3e3;
+}
+
+.step-title {
+    -fx-font-size: 1.286em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ll-burgundy;
+}
+
+.step-text {
+    -fx-font-size: 0.929em;
+    -fx-text-fill: -ll-ink;
+}

@@ -18,8 +18,8 @@ public class AuthService {
     private final UserDAO userDAO = new UserDAO();
 
     /**
-     * Verifies the credentials and returns the account (without its password hash).
-     * Does not change the session; the caller signs in on the JavaFX thread.
+     * Checks the login and returns the account (without the password hash).
+     * The caller signs the user in on the JavaFX thread.
      */
     public User authenticate(String username, String password) throws ServiceException, SQLException {
         String cleanUsername = username == null ? "" : username.trim();
@@ -33,7 +33,7 @@ public class AuthService {
         }
 
         if (user == null) {
-            // Spend the same hashing time so unknown usernames are not revealed by timing.
+            // Hash anyway so wrong usernames take the same time (hides which ones exist).
             PasswordHasher.verify(password, DummyHash.VALUE);
             throw new ServiceException(INVALID_LOGIN);
         }
@@ -46,6 +46,7 @@ public class AuthService {
         return user.withoutPasswordHash();
     }
 
+    /** Forgets the logged-in user. */
     public void logout() {
         SessionContext.signOut();
     }
