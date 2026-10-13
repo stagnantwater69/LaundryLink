@@ -7,13 +7,14 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 /**
- * LaundryLink entry point. Opens the Welcome screen.
+ * App entry point. Opens the Welcome screen.
  */
 public class LaundryLinkApp extends Application {
 
     private static final double WIDTH = 1200;
     private static final double HEIGHT = 720;
 
+    /** Sets up the window and opens the Welcome screen. */
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("LaundryLink - Laundry Shop Management");
@@ -27,6 +28,7 @@ public class LaundryLinkApp extends Application {
         primaryStage.show();
     }
 
+    /** Starts the JavaFX application. */
     public static void main(String[] args) {
         launch(args);
     }

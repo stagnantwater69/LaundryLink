@@ -3,8 +3,8 @@ package com.laundrylink.model;
 import java.math.BigDecimal;
 
 /**
- * Dashboard figures. "Selected day" values use the chosen date; "current"
- * values describe the shop right now regardless of date.
+ * Dashboard figures. "Selected day" numbers use the picked date; "current"
+ * numbers show the shop right now.
  */
 public class DashboardStats {
 
@@ -20,6 +20,7 @@ public class DashboardStats {
     private final int washingCount;
     private final int dryingCount;
 
+    /** All the dashboard figures. */
     public DashboardStats(int ordersReceived, BigDecimal paymentsCollected, int released, int readyForPickup,
             BigDecimal outstandingBalance, int receivedCount, int washingCount, int dryingCount) {
         this.ordersReceived = ordersReceived;
@@ -64,7 +65,7 @@ public class DashboardStats {
         return dryingCount;
     }
 
-    /** Orders currently being processed (washing + drying). */
+    /** Orders in progress (washing + drying). */
     public int getProcessingCount() {
         return washingCount + dryingCount;
     }

@@ -1,0 +1,83 @@
+/* Payments screen. Used with laundrylink.css, which has the -ll-* colors. */
+
+.toolbar-label {
+    -fx-font-size: 1em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ll-ink;
+}
+
+.table-row-cell .table-cell.center-column {
+    -fx-alignment: center;
+}
+
+/* Status text in the payment tables */
+.table-row-cell .table-cell.pay-paid {
+    -fx-text-fill: #1f6b3a;
+    -fx-font-weight: bold;
+}
+
+.table-row-cell .table-cell.pay-partial {
+    -fx-text-fill: #8a6100;
+    -fx-font-weight: bold;
+}
+
+.table-row-cell .table-cell.pay-unpaid {
+    -fx-text-fill: #9b1c1c;
+    -fx-font-weight: bold;
+}
+
+/* Record Payment card */
+.record-value {
+    -fx-font-size: 1.143em;
+    -fx-text-fill: -ll-ink;
+}
+
+.record-highlight {
+    -fx-font-size: 1.429em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ll-burgundy;
+}
+
+.combo-box.order-combo .list-cell {
+    -fx-font-size: 1em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ll-burgundy;
+}
+
+.text-field.readonly-field {
+    -fx-background-color: -ll-outline, -ll-gray;
+    -fx-background-insets: 0, 1.5;
+    -fx-text-fill: -ll-muted;
+}
+
+.cash-only-box {
+    -fx-background-color: #7a9a7b, #dfe8d2;
+    -fx-background-insets: 0, 1.5;
+    -fx-padding: 0.429em 0.714em;
+}
+
+.cash-bill {
+    -fx-fill: #2e7d32;
+    -fx-stroke: #1b4d1f;
+    -fx-stroke-width: 1;
+}
+
+.cash-only-title {
+    -fx-font-size: 1.143em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ll-burgundy;
+}
+
+.cash-only-text {
+    -fx-font-size: 0.929em;
+    -fx-font-style: italic;
+    -fx-text-fill: -ll-ink;
+}
+
+.icon-cancel {
+    -fx-fill: #b3261e;
+}
+
+.button:disabled .icon-cancel {
+    -fx-fill: -ll-outline;
+}

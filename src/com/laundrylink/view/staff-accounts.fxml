@@ -27,13 +27,13 @@
                </children>
             </VBox>
             <Region HBox.hgrow="ALWAYS" />
-            <TextField fx:id="searchField" prefWidth="250.0" promptText="Search name or username..." />
+            <TextField fx:id="searchField" onKeyReleased="#handleSearch" prefWidth="250.0" promptText="Search name or username..." />
             <Button fx:id="refreshButton" mnemonicParsing="false" onAction="#handleRefresh" text="Refresh" />
          </children>
       </HBox>
       <HBox spacing="18.0" VBox.vgrow="ALWAYS">
          <children>
-            <TableView fx:id="accountsTable" HBox.hgrow="ALWAYS">
+            <TableView fx:id="accountsTable" onKeyReleased="#handleAccountSelected" onMouseClicked="#handleAccountSelected" HBox.hgrow="ALWAYS">
                <columns>
                   <TableColumn fx:id="lastNameColumn" prefWidth="105.0" text="Last Name" />
                   <TableColumn fx:id="firstNameColumn" prefWidth="105.0" text="First Name" />

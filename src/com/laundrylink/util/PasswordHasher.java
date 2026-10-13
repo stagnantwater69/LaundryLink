@@ -9,10 +9,8 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
 /**
- * Hashes and verifies account passwords with salted PBKDF2-HMAC-SHA256
- * (built into the JDK, no extra library needed).
- *
- * Stored format: pbkdf2_sha256$iterations$base64(salt)$base64(hash)
+ * Hashes passwords with salted PBKDF2 and checks typed passwords against saved hashes.
+ * Saved format: pbkdf2_sha256$iterations$base64(salt)$base64(hash)
  */
 public final class PasswordHasher {
 
@@ -26,6 +24,7 @@ public final class PasswordHasher {
     private PasswordHasher() {
     }
 
+    /** Makes a new random salt and returns the hash in saved format. */
     public static String hash(String password) {
         byte[] salt = new byte[SALT_BYTES];
         RANDOM.nextBytes(salt);
@@ -34,6 +33,7 @@ public final class PasswordHasher {
         return SCHEME + "$" + ITERATIONS + "$" + encoder.encodeToString(salt) + "$" + encoder.encodeToString(key);
     }
 
+    /** True if the typed password matches the saved hash. */
     public static boolean verify(String password, String storedHash) {
         if (password == null || storedHash == null) {
             return false;
@@ -49,15 +49,18 @@ public final class PasswordHasher {
             byte[] actual = derive(password, salt, iterations, expected.length * 8);
             return MessageDigest.isEqual(expected, actual);
         } catch (IllegalArgumentException e) {
-            return false;
+            return false;   // saved hash is broken, so it can't match
         }
     }
 
+    /** Runs PBKDF2, then wipes the password copy. */
     private static byte[] derive(String password, byte[] salt, int iterations, int keyBits) {
         PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, iterations, keyBits);
         try {
             return SecretKeyFactory.getInstance(ALGORITHM).generateSecret(spec).getEncoded();
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("Password hashing is not available on this Java runtime", e);
+        } catch (InvalidKeySpecException e) {
             throw new IllegalStateException("Password hashing is not available on this Java runtime", e);
         } finally {
             spec.clearPassword();

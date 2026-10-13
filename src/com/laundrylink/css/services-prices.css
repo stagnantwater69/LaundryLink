@@ -1,0 +1,111 @@
+/* Services & Prices screen. Loaded together with laundrylink.css, which defines the -ll-* colors. */
+
+.dashboard-title.services-title {
+    -fx-text-fill: -ll-burgundy;
+}
+
+.title-icon {
+    -fx-fill: -ll-teal;
+}
+
+.admin-note {
+    -fx-font-size: 1em;
+    -fx-text-fill: -ll-ink;
+}
+
+.admin-note.strong {
+    -fx-font-weight: bold;
+}
+
+.toolbar-label,
+.form-row-label {
+    -fx-font-size: 1em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ll-ink;
+}
+
+/* Service list: taller rows with an icon beside each service name. */
+.table-view.services-table .table-row-cell {
+    -fx-cell-size: 3em;
+}
+
+.table-row-cell .table-cell.center-cell {
+    -fx-alignment: center;
+}
+
+.table-row-cell .table-cell.service-name-cell {
+    -fx-font-size: 1em;
+    -fx-graphic-text-gap: 0.714em;
+}
+
+/* Green / red status dots */
+.status-dot.active {
+    -fx-fill: #2e7d32;
+    -fx-stroke: #1b4d1f;
+}
+
+.status-dot.inactive {
+    -fx-fill: #c62828;
+    -fx-stroke: #6d1414;
+}
+
+.status-value {
+    -fx-font-size: 1em;
+    -fx-text-fill: -ll-ink;
+    -fx-graphic-text-gap: 0.5em;
+}
+
+.currency-prefix {
+    -fx-font-size: 1em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ll-muted;
+}
+
+.form-hint {
+    -fx-font-size: 0.929em;
+    -fx-font-style: italic;
+    -fx-text-fill: -ll-muted;
+    -fx-text-alignment: center;
+}
+
+/* Pink "never delete, deactivate instead" box */
+.warning-box {
+    -fx-background-color: #d98c86, #f6d9d5;
+    -fx-background-insets: 0, 1;
+    -fx-padding: 0.643em 0.857em;
+}
+
+.warning-box .label {
+    -fx-font-size: 0.929em;
+    -fx-text-fill: #6d1414;
+}
+
+.warning-icon {
+    -fx-fill: #b3261e;
+}
+
+/* Vector icons on buttons */
+.icon-add {
+    -fx-fill: #2e7d32;
+}
+
+.icon-save {
+    -fx-fill: -ll-teal;
+}
+
+.icon-cancel,
+.icon-block {
+    -fx-fill: #b3261e;
+}
+
+.icon-check {
+    -fx-fill: #2e7d32;
+}
+
+.button:disabled .icon-add,
+.button:disabled .icon-save,
+.button:disabled .icon-cancel,
+.button:disabled .icon-block,
+.button:disabled .icon-check {
+    -fx-fill: -ll-outline;
+}

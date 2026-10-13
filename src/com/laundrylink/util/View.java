@@ -1,13 +1,14 @@
 package com.laundrylink.util;
 
 /**
- * Every FXML screen in the application. FXML files live in com/laundrylink/view.
+ * Every FXML screen in the app (the files are in com/laundrylink/view).
  */
 public enum View {
     // Full-window screens
     WELCOME("welcome.fxml"),
     LOGIN("login.fxml"),
-    OWNER_SETUP("owner-setup.fxml"),
+    REGISTER("register.fxml"),
+    ABOUT("about.fxml"),
     MAIN_SHELL("main-shell.fxml"),
 
     // Tabs inside the main shell (same order as the tab bar)

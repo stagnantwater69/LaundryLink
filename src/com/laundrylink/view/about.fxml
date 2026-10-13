@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- About LaundryLink. Opened from the Welcome screen (before login), so it has no tab bar or user badge.
+     Layout based on aboutlaundrylinkui.png. -->
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.SVGPath?>
+
+<BorderPane prefHeight="720.0" prefWidth="1200.0" styleClass="screen" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.laundrylink.controller.AboutController">
+   <stylesheets>
+      <URL value="@../css/laundrylink.css" />
+      <URL value="@../css/about.css" />
+   </stylesheets>
+   <top>
+      <VBox>
+         <children>
+            <HBox styleClass="app-header">
+               <children>
+                  <fx:include source="brand-header.fxml" />
+               </children>
+            </HBox>
+            <Region styleClass="header-strip" />
+         </children>
+      </VBox>
+   </top>
+   <center>
+      <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="page-scroll" BorderPane.alignment="CENTER">
+         <BorderPane.margin>
+            <Insets bottom="10.0" left="16.0" right="16.0" top="10.0" />
+         </BorderPane.margin>
+         <content>
+            <VBox spacing="10.0" styleClass="about-page">
+               <children>
+
+                  <!-- Back + title -->
+                  <Button fx:id="backButton" mnemonicParsing="false" onAction="#handleBack" text="Back to Welcome">
+                     <graphic>
+                        <SVGPath content="M8,0 L0,7 L8,14 M0,7 L20,7" styleClass="back-arrow" />
+                     </graphic>
+                  </Button>
+                  <VBox>
+                     <children>
+                        <Label styleClass="about-title" text="About LaundryLink" />
+                        <Label styleClass="about-tagline" text="Simple tools for a smoother laundry workflow." />
+                     </children>
+                  </VBox>
+                  <Separator />
+
+                  <!-- What it is -->
+                  <HBox spacing="24.0">
+                     <children>
+                        <VBox alignment="CENTER" minWidth="200.0" spacing="6.0">
+                           <children>
+                              <ImageView fitWidth="170.0" pickOnBounds="true" preserveRatio="true">
+                                 <image>
+                                    <Image url="@../images/logo-basket.png" />
+                                 </image>
+                              </ImageView>
+                              <Label fx:id="versionLabel" styleClass="about-version" text="Version 1.0" />
+                           </children>
+                        </VBox>
+                        <Separator orientation="VERTICAL" />
+                        <VBox spacing="10.0" HBox.hgrow="ALWAYS">
+                           <children>
+                              <Label styleClass="section-title" text="Laundry shop management" />
+                              <Label styleClass="about-text" text="LaundryLink is a Java desktop application that helps laundry shop owners and staff manage customers, laundry orders, service prices, order status and cash payments in one place. Each owner registers their own shop, and every shop's records are kept separate." wrapText="true" />
+                              <HBox spacing="10.0">
+                                 <children>
+                                    <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308" spacing="10.0" styleClass="feature-tile" HBox.hgrow="ALWAYS">
+                                       <children>
+                                          <ImageView fitHeight="34.0" pickOnBounds="true" preserveRatio="true">
+                                             <image>
+                                                <Image url="@../images/icon-customers.png" />
+                                             </image>
+                                          </ImageView>
+                                          <Label styleClass="feature-tile-text" text="Customer Records" wrapText="true" />
+                                       </children>
+                                    </HBox>
+                                    <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308" spacing="10.0" styleClass="feature-tile" HBox.hgrow="ALWAYS">
+                                       <children>
+                                          <ImageView fitHeight="34.0" pickOnBounds="true" preserveRatio="true">
+                                             <image>
+                                                <Image url="@../images/icon-orders.png" />
+                                             </image>
+                                          </ImageView>
+                                          <Label styleClass="feature-tile-text" text="Laundry Orders" wrapText="true" />
+                                       </children>
+                                    </HBox>
+                                    <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308" spacing="10.0" styleClass="feature-tile" HBox.hgrow="ALWAYS">
+                                       <children>
+                                          <ImageView fitHeight="34.0" pickOnBounds="true" preserveRatio="true">
+                                             <image>
+                                                <Image url="@../images/icon-payments.png" />
+                                             </image>
+                                          </ImageView>
+                                          <Label styleClass="feature-tile-text" text="Cash Payments" wrapText="true" />
+                                       </children>
+                                    </HBox>
+                                    <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308" spacing="10.0" styleClass="feature-tile" HBox.hgrow="ALWAYS">
+                                       <children>
+                                          <ImageView fitHeight="34.0" pickOnBounds="true" preserveRatio="true">
+                                             <image>
+                                                <Image url="@../images/stat-orders.png" />
+                                             </image>
+                                          </ImageView>
+                                          <Label styleClass="feature-tile-text" text="Daily Summaries" wrapText="true" />
+                                       </children>
+                                    </HBox>
+                                 </children>
+                              </HBox>
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+                  <Separator />
+
+                  <!-- Developers -->
+                  <VBox>
+                     <children>
+                        <Label styleClass="section-title" text="Meet the Developers" />
+                        <Label styleClass="about-tagline-small" text="The team behind LaundryLink." />
+                     </children>
+                  </VBox>
+                  <GridPane hgap="12.0">
+                     <columnConstraints>
+                        <ColumnConstraints percentWidth="25.0" />
+                        <ColumnConstraints percentWidth="25.0" />
+                        <ColumnConstraints percentWidth="25.0" />
+                        <ColumnConstraints percentWidth="25.0" />
+                     </columnConstraints>
+                     <children>
+                        <HBox maxWidth="1.7976931348623157E308" maxHeight="1.7976931348623157E308" spacing="12.0" styleClass="dev-card" GridPane.columnIndex="0">
+                           <children>
+                              <StackPane styleClass="dev-avatar,dev-blue">
+                                 <children>
+                                    <ImageView fitHeight="60.0" fitWidth="60.0" preserveRatio="true" smooth="false">
+                                       <image>
+                                          <Image url="@../images/dev-ken.png" />
+                                       </image>
+                                    </ImageView>
+                                    <Label styleClass="dev-initial" text="K" StackPane.alignment="BOTTOM_RIGHT" />
+                                 </children>
+                              </StackPane>
+                              <VBox spacing="3.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="dev-name" text="Ken" />
+                                    <Label styleClass="dev-role" text="Lead Developer" wrapText="true" />
+                                    <Label styleClass="dev-text" text="Leads development: accounts, shop registration, orders, payments, dashboard and shared code." wrapText="true" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                        <HBox maxWidth="1.7976931348623157E308" maxHeight="1.7976931348623157E308" spacing="12.0" styleClass="dev-card" GridPane.columnIndex="1">
+                           <children>
+                              <StackPane styleClass="dev-avatar,dev-green">
+                                 <children>
+                                    <ImageView fitHeight="60.0" fitWidth="60.0" preserveRatio="true" smooth="false">
+                                       <image>
+                                          <Image url="@../images/dev-edmar.png" />
+                                       </image>
+                                    </ImageView>
+                                    <Label styleClass="dev-initial" text="E" StackPane.alignment="BOTTOM_RIGHT" />
+                                 </children>
+                              </StackPane>
+                              <VBox spacing="3.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="dev-name" text="Edmar" />
+                                    <Label styleClass="dev-role" text="Frontend Lead" wrapText="true" />
+                                    <Label styleClass="dev-text" text="Leads the screen designs and look of the app, and built Customer Management." wrapText="true" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                        <HBox maxWidth="1.7976931348623157E308" maxHeight="1.7976931348623157E308" spacing="12.0" styleClass="dev-card" GridPane.columnIndex="2">
+                           <children>
+                              <StackPane styleClass="dev-avatar,dev-red">
+                                 <children>
+                                    <ImageView fitHeight="60.0" fitWidth="60.0" preserveRatio="true" smooth="false">
+                                       <image>
+                                          <Image url="@../images/dev-reniel.png" />
+                                       </image>
+                                    </ImageView>
+                                    <Label styleClass="dev-initial" text="R" StackPane.alignment="BOTTOM_RIGHT" />
+                                 </children>
+                              </StackPane>
+                              <VBox spacing="3.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="dev-name" text="Reniel" />
+                                    <Label styleClass="dev-role" text="Business Plan Lead" wrapText="true" />
+                                    <Label styleClass="dev-text" text="Leads the business plan, and built the service catalog and prices." wrapText="true" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                        <HBox maxWidth="1.7976931348623157E308" maxHeight="1.7976931348623157E308" spacing="12.0" styleClass="dev-card" GridPane.columnIndex="3">
+                           <children>
+                              <StackPane styleClass="dev-avatar,dev-purple">
+                                 <children>
+                                    <ImageView fitHeight="60.0" fitWidth="60.0" preserveRatio="true" smooth="false">
+                                       <image>
+                                          <Image url="@../images/dev-johnray.png" />
+                                       </image>
+                                    </ImageView>
+                                    <Label styleClass="dev-initial" text="J" StackPane.alignment="BOTTOM_RIGHT" />
+                                 </children>
+                              </StackPane>
+                              <VBox spacing="3.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="dev-name" text="John Ray" />
+                                    <Label styleClass="dev-role" text="Documentation Lead" wrapText="true" />
+                                    <Label styleClass="dev-text" text="Leads the project documentation, and built order status tracking." wrapText="true" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                     </children>
+                  </GridPane>
+               </children>
+            </VBox>
+         </content>
+      </ScrollPane>
+   </center>
+   <bottom>
+      <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="about-footer">
+         <children>
+            <Label text="Built with Java  •  JavaFX  •  Scene Builder  •  MySQL" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Label fx:id="copyrightLabel" text="LaundryLink" />
+         </children>
+      </HBox>
+   </bottom>
+</BorderPane>

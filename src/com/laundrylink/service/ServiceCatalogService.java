@@ -30,8 +30,8 @@ public class ServiceCatalogService {
         User user = SessionContext.requireLoggedIn();
         try (Connection connection = ConnectionFactory.getConnection()) {
             return user.isAdmin()
-                    ? laundryServiceDAO.findAll(connection)
-                    : laundryServiceDAO.findAllActive(connection);
+                    ? laundryServiceDAO.findAll(connection, user.getShopId())
+                    : laundryServiceDAO.findAllActive(connection, user.getShopId());
         }
     }
 
@@ -40,27 +40,27 @@ public class ServiceCatalogService {
      * new order.
      */
     public List<LaundryService> listActiveServices() throws ServiceException, SQLException {
-        SessionContext.requireLoggedIn();
+        int shopId = SessionContext.getCurrentShopId();
         try (Connection connection = ConnectionFactory.getConnection()) {
-            return laundryServiceDAO.findAllActive(connection);
+            return laundryServiceDAO.findAllActive(connection, shopId);
         }
     }
 
     /** Creates an active laundry service. Owner only. */
     public LaundryService createService(String serviceName, PricingUnit pricingUnit, BigDecimal price)
             throws ServiceException, SQLException {
-        SessionContext.requireAdmin();
+        int shopId = SessionContext.requireAdmin().getShopId();
         String cleanName = requireServiceName(serviceName);
         PricingUnit cleanUnit = requirePricingUnit(pricingUnit);
         BigDecimal cleanPrice = requirePrice(price);
 
         try {
             return TransactionHelper.inTransaction(connection -> {
-                if (laundryServiceDAO.serviceNameExists(connection, cleanName, 0)) {
+                if (laundryServiceDAO.serviceNameExists(connection, shopId, cleanName, 0)) {
                     throw new ServiceException("A service named \"" + cleanName + "\" already exists.");
                 }
-                int id = laundryServiceDAO.insert(connection, cleanName, cleanUnit, cleanPrice);
-                return laundryServiceDAO.findById(connection, id);
+                int id = laundryServiceDAO.insert(connection, shopId, cleanName, cleanUnit, cleanPrice);
+                return laundryServiceDAO.findById(connection, shopId, id);
             });
         } catch (SQLException e) {
             if (e.getSQLState() != null && e.getSQLState().startsWith("23")) {
@@ -73,7 +73,7 @@ public class ServiceCatalogService {
     /** Updates a service's current catalog details. Owner only. */
     public LaundryService updateService(int serviceId, String serviceName,
             PricingUnit pricingUnit, BigDecimal price) throws ServiceException, SQLException {
-        SessionContext.requireAdmin();
+        int shopId = SessionContext.requireAdmin().getShopId();
         if (serviceId <= 0) {
             throw new ServiceException("Select a service to update.");
         }
@@ -84,17 +84,17 @@ public class ServiceCatalogService {
 
         try {
             return TransactionHelper.inTransaction(connection -> {
-                LaundryService existing = laundryServiceDAO.findById(connection, serviceId);
+                LaundryService existing = laundryServiceDAO.findById(connection, shopId, serviceId);
                 if (existing == null) {
                     throw new ServiceException("That service no longer exists. Refresh the list.");
                 }
-                if (laundryServiceDAO.serviceNameExists(connection, cleanName, serviceId)) {
+                if (laundryServiceDAO.serviceNameExists(connection, shopId, cleanName, serviceId)) {
                     throw new ServiceException("A service named \"" + cleanName + "\" already exists.");
                 }
-                if (!laundryServiceDAO.update(connection, serviceId, cleanName, cleanUnit, cleanPrice)) {
+                if (!laundryServiceDAO.update(connection, shopId, serviceId, cleanName, cleanUnit, cleanPrice)) {
                     throw new ServiceException("That service could not be updated. Refresh the list.");
                 }
-                return laundryServiceDAO.findById(connection, serviceId);
+                return laundryServiceDAO.findById(connection, shopId, serviceId);
             });
         } catch (SQLException e) {
             if (e.getSQLState() != null && e.getSQLState().startsWith("23")) {
@@ -107,23 +107,23 @@ public class ServiceCatalogService {
     /** Activates or deactivates a service without deleting its history. Owner only. */
     public LaundryService setServiceActive(int serviceId, boolean active)
             throws ServiceException, SQLException {
-        SessionContext.requireAdmin();
+        int shopId = SessionContext.requireAdmin().getShopId();
         if (serviceId <= 0) {
             throw new ServiceException("Select a service to update.");
         }
 
         return TransactionHelper.inTransaction(connection -> {
-            LaundryService existing = laundryServiceDAO.findById(connection, serviceId);
+            LaundryService existing = laundryServiceDAO.findById(connection, shopId, serviceId);
             if (existing == null) {
                 throw new ServiceException("That service no longer exists. Refresh the list.");
             }
             if (existing.isActive() == active) {
                 return existing;
             }
-            if (!laundryServiceDAO.updateActiveStatus(connection, serviceId, active)) {
+            if (!laundryServiceDAO.updateActiveStatus(connection, shopId, serviceId, active)) {
                 throw new ServiceException("That service's status could not be updated. Refresh the list.");
             }
-            return laundryServiceDAO.findById(connection, serviceId);
+            return laundryServiceDAO.findById(connection, shopId, serviceId);
         });
     }
 

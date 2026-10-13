@@ -1,8 +1,7 @@
 package com.laundrylink.model;
 
 /**
- * Laundry processing stages. Stored in orders.laundry_status and
- * order_status_history using the enum constant name.
+ * Laundry stages, saved by name in orders and order_status_history.
  */
 public enum OrderStatus {
     RECEIVED("Received"),
@@ -22,6 +21,7 @@ public enum OrderStatus {
         return displayName;
     }
 
+    /** Shows the readable name in lists. */
     @Override
     public String toString() {
         return displayName;

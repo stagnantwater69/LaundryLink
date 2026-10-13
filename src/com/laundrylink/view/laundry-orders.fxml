@@ -74,7 +74,7 @@
                                                 <Image url="@../images/icon-search.png" />
                                              </image>
                                           </ImageView>
-                                          <TextField fx:id="searchField" promptText="Search by order no., customer name or phone..." HBox.hgrow="ALWAYS" />
+                                          <TextField fx:id="searchField" onKeyReleased="#handleFilter" promptText="Search by order no., customer name or phone..." HBox.hgrow="ALWAYS" />
                                        </children>
                                     </HBox>
                                     <GridPane hgap="8.0" vgap="6.0">
@@ -84,14 +84,14 @@
                                        </columnConstraints>
                                        <children>
                                           <Label minWidth="-Infinity" styleClass="value-text" text="Laundry Status:" />
-                                          <ComboBox fx:id="statusFilterComboBox" prefWidth="170.0" GridPane.columnIndex="1" />
+                                          <ComboBox fx:id="statusFilterComboBox" onAction="#handleFilter" prefWidth="170.0" GridPane.columnIndex="1" />
                                           <Label minWidth="-Infinity" styleClass="value-text" text="Payment Status:" GridPane.rowIndex="1" />
-                                          <ComboBox fx:id="paymentFilterComboBox" prefWidth="170.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                          <ComboBox fx:id="paymentFilterComboBox" onAction="#handleFilter" prefWidth="170.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                                        </children>
                                     </GridPane>
                                  </children>
                               </HBox>
-                              <TableView fx:id="ordersTable" minHeight="180.0" VBox.vgrow="ALWAYS">
+                              <TableView fx:id="ordersTable" onKeyReleased="#handleOrderSelected" onMouseClicked="#handleOrderSelected" minHeight="180.0" VBox.vgrow="ALWAYS">
                                  <columns>
                                     <TableColumn fx:id="orderNumberColumn" prefWidth="90.0" text="Order No." />
                                     <TableColumn fx:id="customerColumn" prefWidth="150.0" text="Customer" />
@@ -147,7 +147,7 @@
                                                       <Label minWidth="-Infinity" styleClass="form-row-label" text="Customer" />
                                                    </children>
                                                 </HBox>
-                                                <ComboBox fx:id="customerComboBox" maxWidth="1.7976931348623157E308" promptText="Select a customer (type to search)" GridPane.columnIndex="1" />
+                                                <ComboBox fx:id="customerComboBox" onKeyTyped="#handleCustomerTyped" maxWidth="1.7976931348623157E308" promptText="Select a customer (type to search)" GridPane.columnIndex="1" />
                                                 <Button fx:id="newCustomerButton" minWidth="-Infinity" mnemonicParsing="false" onAction="#handleNewCustomer" styleClass="compact-button" text="New Customer" GridPane.columnIndex="2" />
 
                                                 <HBox alignment="CENTER_LEFT" spacing="6.0" GridPane.rowIndex="1">
@@ -160,7 +160,7 @@
                                                       <Label minWidth="-Infinity" styleClass="form-row-label" text="Service" />
                                                    </children>
                                                 </HBox>
-                                                <ComboBox fx:id="serviceComboBox" maxWidth="1.7976931348623157E308" promptText="Select a service" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="1" />
+                                                <ComboBox fx:id="serviceComboBox" onAction="#handleServiceChosen" maxWidth="1.7976931348623157E308" promptText="Select a service" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="1" />
 
                                                 <Label minWidth="-Infinity" styleClass="form-row-label" text="Quantity" GridPane.halignment="RIGHT" GridPane.rowIndex="2" />
                                                 <HBox alignment="CENTER_LEFT" spacing="8.0" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="2">
@@ -203,7 +203,7 @@
                                           <HBox alignment="CENTER_LEFT" spacing="8.0">
                                              <children>
                                                 <Label minWidth="-Infinity" styleClass="form-row-label" text="Expected Completion" />
-                                                <DatePicker fx:id="expectedDatePicker" minWidth="138.0" maxWidth="1.7976931348623157E308" promptText="Select a date" HBox.hgrow="ALWAYS" />
+                                                <DatePicker fx:id="expectedDatePicker" editable="false" minWidth="138.0" maxWidth="1.7976931348623157E308" promptText="Select a date" HBox.hgrow="ALWAYS" />
                                              </children>
                                           </HBox>
                                           <HBox spacing="8.0" VBox.vgrow="ALWAYS">

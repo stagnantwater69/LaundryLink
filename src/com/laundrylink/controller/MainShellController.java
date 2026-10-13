@@ -7,10 +7,6 @@ import com.laundrylink.util.Dialogs;
 import com.laundrylink.util.SceneNavigator;
 import com.laundrylink.util.SessionContext;
 import com.laundrylink.util.View;
-import java.util.Arrays;
-import java.util.List;
-import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
@@ -18,96 +14,93 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 
 /**
- * Application shell after login: header with the logged-in user, top tab bar,
- * a content area where module screens are shown, and a status bar.
+ * The main window after login: header, tab bar, tab content and status bar.
  */
 public class MainShellController {
 
-    @FXML
-    private Hyperlink userNameLink;
-    @FXML
-    private Label userRoleLabel;
-    @FXML
-    private Button dashboardTab;
-    @FXML
-    private Button customersTab;
-    @FXML
-    private Button laundryOrdersTab;
-    @FXML
-    private Button paymentsTab;
-    @FXML
-    private Button servicesTab;
-    @FXML
-    private Button staffAccountsTab;
-    @FXML
-    private StackPane contentArea;
-    @FXML
-    private Label statusLabel;
+    @FXML private Hyperlink userNameLink;
+    @FXML private Label userRoleLabel;
+    @FXML private Button dashboardTab;
+    @FXML private Button customersTab;
+    @FXML private Button laundryOrdersTab;
+    @FXML private Button paymentsTab;
+    @FXML private Button servicesTab;
+    @FXML private Button staffAccountsTab;
+    @FXML private StackPane contentArea;
+    @FXML private Label statusLabel;
 
     private final AuthService authService = new AuthService();
 
+    /** Shows the user, hides owner-only tabs from staff, and opens the Dashboard. */
     @FXML
     private void initialize() {
-        if (!SessionContext.isLoggedIn()) {
-            Platform.runLater(() -> SceneNavigator.showScreen(View.LOGIN));
-            return;
-        }
+        AppShell.setShell(this, statusLabel);
+        showUserBadge();
 
-        userNameLink.textProperty().bind(Bindings.createStringBinding(() -> {
-            User user = SessionContext.getCurrentUser();
-            return user == null ? "" : user.getFullName();
-        }, SessionContext.currentUserProperty()));
-        userRoleLabel.textProperty().bind(Bindings.createStringBinding(() -> {
-            User user = SessionContext.getCurrentUser();
-            return user == null ? "" : user.getRole().getDisplayName();
-        }, SessionContext.currentUserProperty()));
-        statusLabel.textProperty().bind(AppShell.statusProperty());
-
-        // Staff never see owner-only tabs; the service layer also rejects them.
+        // Staff don't see owner-only tabs (the services block them too).
         boolean admin = SessionContext.isAdmin();
         staffAccountsTab.setVisible(admin);
         staffAccountsTab.setManaged(admin);
 
-        AppShell.setTabOpener(this::showTab);
         AppShell.setStatus("Ready.");
         showTab(View.DASHBOARD);
     }
 
+    /** Shows the user's name, role and shop at the top right. */
+    public void showUserBadge() {
+        User user = SessionContext.getCurrentUser();
+        if (user == null) {
+            userNameLink.setText("");
+            userRoleLabel.setText("");
+        } else {
+            userNameLink.setText(user.getFullName());
+            userRoleLabel.setText(user.getRole().getDisplayName() + " - " + user.getShopName());
+        }
+    }
+
+    /** Dashboard tab button. */
     @FXML
     private void handleShowDashboard() {
         showTab(View.DASHBOARD);
     }
 
+    /** Customers tab button. */
     @FXML
     private void handleShowCustomers() {
         showTab(View.CUSTOMERS);
     }
 
+    /** Laundry Orders tab button. */
     @FXML
     private void handleShowLaundryOrders() {
         showTab(View.LAUNDRY_ORDERS);
     }
 
+    /** Payments tab button. */
     @FXML
     private void handleShowPayments() {
         showTab(View.PAYMENTS);
     }
 
+    /** Services & Prices tab button. */
     @FXML
     private void handleShowServices() {
         showTab(View.SERVICES_PRICES);
     }
 
+    /** Staff Accounts tab button. */
     @FXML
     private void handleShowStaffAccounts() {
         showTab(View.STAFF_ACCOUNTS);
     }
 
+    /** The user's name opens My Profile. */
     @FXML
     private void handleShowProfile() {
         showTab(View.MY_PROFILE);
     }
 
+    /** Logout link: asks first, then goes back to Login. */
     @FXML
     private void handleLogout() {
         if (Dialogs.confirm("Log out", "Log out of LaundryLink?")) {
@@ -116,15 +109,15 @@ public class MainShellController {
         }
     }
 
-    private void showTab(View view) {
+    /** Loads a tab into the content area and highlights its button. */
+    public void showTab(View view) {
         if (view == View.STAFF_ACCOUNTS && !SessionContext.isAdmin()) {
             return;
         }
         AppShell.setStatus("Ready.");
-        contentArea.getChildren().setAll(SceneNavigator.load(view).getRoot());
+        contentArea.getChildren().setAll(SceneNavigator.loadView(view));
 
-        List<Button> tabs = Arrays.asList(dashboardTab, customersTab, laundryOrdersTab, paymentsTab,
-                servicesTab, staffAccountsTab);
+        Button[] tabs = {dashboardTab, customersTab, laundryOrdersTab, paymentsTab, servicesTab, staffAccountsTab};
         for (Button tab : tabs) {
             tab.getStyleClass().remove("active");
         }
@@ -134,6 +127,7 @@ public class MainShellController {
         }
     }
 
+    /** The tab button for a view (My Profile has none; it opens from the user's name). */
     private Button tabFor(View view) {
         switch (view) {
             case DASHBOARD:
@@ -149,7 +143,7 @@ public class MainShellController {
             case STAFF_ACCOUNTS:
                 return staffAccountsTab;
             default:
-                return null; // My Profile has no tab; it opens from the user badge.
+                return null;
         }
     }
 }

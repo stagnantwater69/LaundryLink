@@ -1,4 +1,4 @@
-/* Laundry Orders screen. Loaded together with laundrylink.css, which defines the -ll-* colors. */
+/* Laundry Orders screen. Used with laundrylink.css, which has the -ll-* colors. */
 
 .table-view.compact-table .column-header .label,
 .table-view.compact-table .table-cell {
@@ -27,7 +27,7 @@
     -fx-text-fill: -ll-burgundy;
 }
 
-/* Thin teal bar above a sub-section (Order Items, Notes, Status History). */
+/* Thin teal bar above a section (Order Items, Notes, Status History). */
 .section-header {
     -fx-background-color: -ll-teal;
     -fx-text-fill: #f7f3e3;
@@ -59,7 +59,7 @@
     -fx-background-color: -ll-paper;
 }
 
-/* Status / payment pills in Order Details */
+/* Status and payment pills in Order Details */
 .pill {
     -fx-font-size: 0.929em;
     -fx-padding: 0.143em 0.714em;
@@ -97,7 +97,7 @@
     -fx-text-fill: #9b1c1c;
 }
 
-/* Colored status / payment text in the order list */
+/* Colored status and payment text in the order list */
 .table-row-cell .table-cell.status-ready {
     -fx-text-fill: #1f6b3a;
 }
@@ -159,8 +159,7 @@
     -fx-background-insets: 0, 1;
 }
 
-/* Laundry Orders packs a list, a form and a detail panel on one screen,
-   so it uses slightly smaller text than the other pages. */
+/* This screen fits a list, a form and details on one page, so its text is a bit smaller. */
 .dense-page {
     -fx-font-size: 0.857em;
 }

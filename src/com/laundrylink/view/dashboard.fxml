@@ -36,7 +36,7 @@
                   <HBox alignment="CENTER_RIGHT" spacing="10.0">
                      <children>
                         <Label styleClass="value-text" text="Daily figures for selected date:" />
-                        <DatePicker fx:id="datePicker" editable="false" prefWidth="170.0" />
+                        <DatePicker fx:id="datePicker" editable="false" onAction="#handleDateChanged" prefWidth="170.0" />
                         <Button mnemonicParsing="false" onAction="#handleViewDailySummary" text="View Daily Summary">
                            <graphic>
                               <ImageView fitHeight="18.0" pickOnBounds="true" preserveRatio="true">
@@ -170,14 +170,14 @@
                                           <Image url="@../images/icon-search.png" />
                                        </image>
                                     </ImageView>
-                                    <TextField fx:id="searchField" promptText="Search by order no. or customer name..." HBox.hgrow="ALWAYS" />
+                                    <TextField fx:id="searchField" onKeyReleased="#handleFilter" promptText="Search by order no. or customer name..." HBox.hgrow="ALWAYS" />
                                  </children>
                               </HBox>
                               <Label styleClass="value-text" text="Status:" />
-                              <ComboBox fx:id="statusFilterComboBox" prefWidth="180.0" />
+                              <ComboBox fx:id="statusFilterComboBox" onAction="#handleFilter" prefWidth="180.0" />
                            </children>
                         </HBox>
-                        <TableView fx:id="ordersTable" VBox.vgrow="ALWAYS">
+                        <TableView fx:id="ordersTable" onKeyReleased="#handleOrderSelected" onMouseClicked="#handleOrderSelected" VBox.vgrow="ALWAYS">
                            <columns>
                               <TableColumn fx:id="orderNumberColumn" prefWidth="80.0" text="Order" />
                               <TableColumn fx:id="customerColumn" prefWidth="130.0" text="Customer" />

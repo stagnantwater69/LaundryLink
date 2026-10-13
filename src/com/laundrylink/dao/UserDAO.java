@@ -12,16 +12,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * JDBC queries for the users table. The caller supplies the connection so
- * several calls can share one transaction.
+ * SQL for the users table. The caller passes the connection so several
+ * calls can share one transaction.
  */
 public class UserDAO {
 
-    private static final String COLUMNS =
-            "id, first_name, middle_name, last_name, username, password_hash, role, is_active, created_at";
+    private static final String SELECT_USER =
+            "SELECT u.id, u.shop_id, s.shop_name, u.first_name, u.middle_name, u.last_name, u.username,"
+            + " u.password_hash, u.role, u.is_active, u.created_at"
+            + " FROM users u JOIN shops s ON s.id = u.shop_id";
 
+    /** The account with this id (and its shop name), or null. */
     public User findById(Connection connection, int id) throws SQLException {
-        String sql = "SELECT " + COLUMNS + " FROM users WHERE id = ?";
+        String sql = SELECT_USER + " WHERE u.id = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, id);
             try (ResultSet rs = statement.executeQuery()) {
@@ -30,8 +33,9 @@ public class UserDAO {
         }
     }
 
+    /** The account with this username (for login), or null. */
     public User findByUsername(Connection connection, String username) throws SQLException {
-        String sql = "SELECT " + COLUMNS + " FROM users WHERE username = ?";
+        String sql = SELECT_USER + " WHERE u.username = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, username);
             try (ResultSet rs = statement.executeQuery()) {
@@ -40,46 +44,46 @@ public class UserDAO {
         }
     }
 
-    /** Staff accounts only (the owner is managed in My Profile). */
-    public List<User> findAllStaff(Connection connection) throws SQLException {
-        String sql = "SELECT " + COLUMNS + " FROM users WHERE role = 'STAFF'"
-                + " ORDER BY is_active DESC, last_name, first_name";
+    /** Staff accounts of one shop (owners are managed in My Profile). */
+    public List<User> findAllStaff(Connection connection, int shopId) throws SQLException {
+        String sql = SELECT_USER + " WHERE u.shop_id = ? AND u.role = 'STAFF'"
+                + " ORDER BY u.is_active DESC, u.last_name, u.first_name";
         List<User> users = new ArrayList<>();
-        try (PreparedStatement statement = connection.prepareStatement(sql);
-                ResultSet rs = statement.executeQuery()) {
-            while (rs.next()) {
-                users.add(mapRow(rs));
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, shopId);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    users.add(mapRow(rs));
+                }
             }
         }
         return users;
     }
 
-    /**
-     * Checks whether the owner account (role ADMIN) exists. With lockForUpdate inside a
-     * transaction, concurrent first-run registrations cannot both succeed.
-     */
-    public boolean adminExists(Connection connection, boolean lockForUpdate) throws SQLException {
-        String sql = "SELECT id FROM users WHERE role = 'ADMIN' LIMIT 1" + (lockForUpdate ? " FOR UPDATE" : "");
-        try (PreparedStatement statement = connection.prepareStatement(sql);
+    /** True once any shop has been registered. */
+    public boolean anyShopExists(Connection connection) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement("SELECT 1 FROM shops LIMIT 1");
                 ResultSet rs = statement.executeQuery()) {
             return rs.next();
         }
     }
 
-    /**
-     * Serializes first-run owner setup across connections. The lock is held by
-     * this connection's session and released when the connection closes.
-     */
-    public void lockOwnerSetup(Connection connection) throws SQLException {
-        String sql = "SELECT GET_LOCK('laundrylink.owner_setup', 10)";
-        try (PreparedStatement statement = connection.prepareStatement(sql);
-                ResultSet rs = statement.executeQuery()) {
-            if (!rs.next() || rs.getInt(1) != 1) {
-                throw new SQLException("Owner setup is busy. Please try again.");
+    /** Creates a shop and returns its id. */
+    public int insertShop(Connection connection, String shopName) throws SQLException {
+        String sql = "INSERT INTO shops (shop_name) VALUES (?)";
+        try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            statement.setString(1, shopName);
+            statement.executeUpdate();
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    return keys.getInt(1);
+                }
             }
         }
+        throw new SQLException("Shop was saved but no ID was returned.");
     }
 
+    /** True if another account already has this username. */
     public boolean usernameExists(Connection connection, String username, int excludeUserId) throws SQLException {
         String sql = "SELECT 1 FROM users WHERE username = ? AND id <> ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -91,17 +95,19 @@ public class UserDAO {
         }
     }
 
-    public int insert(Connection connection, String firstName, String middleName, String lastName,
+    /** Saves a new account and returns its id. */
+    public int insert(Connection connection, int shopId, String firstName, String middleName, String lastName,
             String username, String passwordHash, Role role) throws SQLException {
-        String sql = "INSERT INTO users (first_name, middle_name, last_name, username, password_hash, role, is_active)"
-                + " VALUES (?, ?, ?, ?, ?, ?, 1)";
+        String sql = "INSERT INTO users (shop_id, first_name, middle_name, last_name, username, password_hash, role,"
+                + " is_active) VALUES (?, ?, ?, ?, ?, ?, ?, 1)";
         try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            statement.setString(1, firstName);
-            statement.setString(2, middleName);
-            statement.setString(3, lastName);
-            statement.setString(4, username);
-            statement.setString(5, passwordHash);
-            statement.setString(6, role.name());
+            statement.setInt(1, shopId);
+            statement.setString(2, firstName);
+            statement.setString(3, middleName);
+            statement.setString(4, lastName);
+            statement.setString(5, username);
+            statement.setString(6, passwordHash);
+            statement.setString(7, role.name());
             statement.executeUpdate();
             try (ResultSet keys = statement.getGeneratedKeys()) {
                 if (keys.next()) {
@@ -112,6 +118,7 @@ public class UserDAO {
         throw new SQLException("Account was saved but no ID was returned.");
     }
 
+    /** Saves an account's name, username and role. */
     public void update(Connection connection, int id, String firstName, String middleName, String lastName,
             String username, Role role) throws SQLException {
         String sql = "UPDATE users SET first_name = ?, middle_name = ?, last_name = ?, username = ?, role = ?"
@@ -127,6 +134,7 @@ public class UserDAO {
         }
     }
 
+    /** Turns an account's login on or off. */
     public void updateActive(Connection connection, int id, boolean active) throws SQLException {
         String sql = "UPDATE users SET is_active = ? WHERE id = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -136,6 +144,7 @@ public class UserDAO {
         }
     }
 
+    /** Saves a new password hash. */
     public void updatePassword(Connection connection, int id, String passwordHash) throws SQLException {
         String sql = "UPDATE users SET password_hash = ? WHERE id = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -145,10 +154,13 @@ public class UserDAO {
         }
     }
 
+    /** Builds a User from the current row. */
     private User mapRow(ResultSet rs) throws SQLException {
         Timestamp createdAt = rs.getTimestamp("created_at");
         return new User(
                 rs.getInt("id"),
+                rs.getInt("shop_id"),
+                rs.getString("shop_name"),
                 rs.getString("first_name"),
                 rs.getString("middle_name"),
                 rs.getString("last_name"),
