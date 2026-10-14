@@ -19,10 +19,12 @@ public class DashboardStats {
     private final int receivedCount;
     private final int washingCount;
     private final int dryingCount;
+    private final int ironingCount;
 
     /** All the dashboard figures. */
     public DashboardStats(int ordersReceived, BigDecimal paymentsCollected, int released, int readyForPickup,
-            BigDecimal outstandingBalance, int receivedCount, int washingCount, int dryingCount) {
+            BigDecimal outstandingBalance, int receivedCount, int washingCount, int dryingCount,
+            int ironingCount) {
         this.ordersReceived = ordersReceived;
         this.paymentsCollected = paymentsCollected;
         this.released = released;
@@ -31,6 +33,7 @@ public class DashboardStats {
         this.receivedCount = receivedCount;
         this.washingCount = washingCount;
         this.dryingCount = dryingCount;
+        this.ironingCount = ironingCount;
     }
 
     public int getOrdersReceived() {
@@ -65,8 +68,12 @@ public class DashboardStats {
         return dryingCount;
     }
 
-    /** Orders in progress (washing + drying). */
+    public int getIroningCount() {
+        return ironingCount;
+    }
+
+    /** Orders in progress (washing + drying + ironing). */
     public int getProcessingCount() {
-        return washingCount + dryingCount;
+        return washingCount + dryingCount + ironingCount;
     }
 }

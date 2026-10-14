@@ -1,6 +1,7 @@
 package com.laundrylink.controller;
 
 import com.laundrylink.model.CustomerOption;
+import com.laundrylink.model.LaundryService;
 import com.laundrylink.model.OrderDetails;
 import com.laundrylink.model.OrderItemLine;
 import com.laundrylink.model.OrderStatus;
@@ -132,6 +133,7 @@ public class LaundryOrdersController {
     @FXML private Button editOrderButton;
     @FXML private Button cancelOrderButton;
     @FXML private Button deleteOrderButton;
+    @FXML private Button undoStatusButton;
     @FXML private HBox releaseMessageBox;
     @FXML private Label releaseMessageLabel;
 
@@ -409,6 +411,7 @@ public class LaundryOrdersController {
         if (shownOrder == null) {
             recordPaymentButton.setDisable(true);
             updateStatusButton.setDisable(true);
+            undoStatusButton.setDisable(true);
             releaseOrderButton.setDisable(true);
             editOrderButton.setDisable(true);
             cancelOrderButton.setDisable(true);
@@ -417,10 +420,15 @@ public class LaundryOrdersController {
             return;
         }
         OrderSummary summary = shownOrder.getSummary();
-        OrderStatus next = shownOrder.getNextStatus();
+        List<OrderStatus> next = shownOrder.getNextStatuses();
         recordPaymentButton.setDisable(!shownOrder.isOpen() || summary.getBalance().signum() <= 0);
-        updateStatusButton.setDisable(next == null);
-        updateStatusButton.setTooltip(new Tooltip(next == null ? "No further stage." : "Move to " + next.getDisplayName()));
+        updateStatusButton.setDisable(next.isEmpty());
+        updateStatusButton.setTooltip(new Tooltip(next.isEmpty() ? "No further stage." : "Choose the next stage"));
+        OrderStatus undoTo = shownOrder.getUndoTarget();
+        undoStatusButton.setDisable(undoTo == null);
+        undoStatusButton.setTooltip(new Tooltip(undoTo == null ? "Nothing to undo."
+                : "Fix a wrong status: back to " + undoTo.getDisplayName()
+                + (SessionContext.isAdmin() ? "" : " (staff: within " + OrderService.STAFF_UNDO_MINUTES + " minutes)")));
         releaseOrderButton.setDisable(!summary.isReleasable());
         editOrderButton.setDisable(!shownOrder.isOpen());
         cancelOrderButton.setDisable(!shownOrder.isCancellable());
@@ -718,24 +726,55 @@ public class LaundryOrdersController {
         }
     }
 
-    /** Update Status button: moves the order to its next stage. */
+    /** Update Status button: picks the next stage from a dropdown (unneeded stages can be skipped). */
     @FXML
     private void handleUpdateStatus() {
         OrderDetails order = shownOrder;
-        OrderStatus next = order == null ? null : order.getNextStatus();
-        if (next == null) {
+        if (order == null || order.getNextStatuses().isEmpty()) {
             return;
         }
         String number = order.getSummary().getOrderNumber();
-        if (!Dialogs.confirm("Update status", "Move " + number + " from "
-                + order.getSummary().getStatusText() + " to " + next.getDisplayName() + "?")) {
+        String needs = order.getNeededStages().isEmpty() ? ""
+                : "\nThis order needs: " + LaundryService.stagesText(order.getNeededStages()) + ".";
+        final OrderStatus next = Dialogs.choose("Update status", "Move " + number + " from "
+                + order.getSummary().getStatusText() + " to:" + needs,
+                order.getNextStatuses(), order.getSuggestedNextStatus());
+        if (next == null) {
+            return;
+        }
+        List<OrderStatus> skipped = order.getSkippedStages(next);
+        if (!skipped.isEmpty() && !Dialogs.confirm("Skip " + LaundryService.stagesText(skipped),
+                number + " has services that need " + LaundryService.stagesText(skipped) + ".\n"
+                + "Moving it to " + next.getDisplayName() + " skips "
+                + (skipped.size() == 1 ? "that stage" : "those stages") + ". Continue?")) {
             return;
         }
         final int orderId = order.getId();
         setDetailsBusy(true);
-        BackgroundTask.run(() -> orderService.advanceStatus(orderId),
+        BackgroundTask.run(() -> orderService.updateStatus(orderId, next),
                 updated -> afterDetailAction(updated, "Status updated", number + " is now " + next.getDisplayName() + "."),
                 error -> afterDetailFailure(orderId, "Cannot update status", error));
+    }
+
+    /** Undo Status button: moves the order back to the stage before the last change. */
+    @FXML
+    private void handleUndoStatus() {
+        OrderDetails order = shownOrder;
+        final OrderStatus previous = order == null ? null : order.getUndoTarget();
+        if (previous == null) {
+            return;
+        }
+        String number = order.getSummary().getOrderNumber();
+        if (!Dialogs.confirm("Undo status", "Move " + number + " back from "
+                + order.getSummary().getStatusText() + " to " + previous.getDisplayName() + "?\n"
+                + "The undo is kept in the status history.")) {
+            return;
+        }
+        final int orderId = order.getId();
+        setDetailsBusy(true);
+        BackgroundTask.run(() -> orderService.undoLastStatus(orderId),
+                updated -> afterDetailAction(updated, "Status undone", number + " is back to " + previous.getDisplayName() + "."),
+                error -> afterDetailFailure(orderId, "Cannot undo status", error));
     }
 
     /** Release Order button: hands the laundry back to the customer. */
@@ -834,6 +873,7 @@ public class LaundryOrdersController {
         if (busy) {
             recordPaymentButton.setDisable(true);
             updateStatusButton.setDisable(true);
+            undoStatusButton.setDisable(true);
             releaseOrderButton.setDisable(true);
             editOrderButton.setDisable(true);
             cancelOrderButton.setDisable(true);

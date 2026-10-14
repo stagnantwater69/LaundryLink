@@ -392,6 +392,7 @@
                               <Button fx:id="editOrderButton" minWidth="-Infinity" disable="true" mnemonicParsing="false" onAction="#handleEditOrder" styleClass="compact-button" text="Edit Order" />
                               <Button fx:id="cancelOrderButton" minWidth="-Infinity" disable="true" mnemonicParsing="false" onAction="#handleCancelOrder" styleClass="compact-button" text="Cancel Order" />
                               <Button fx:id="deleteOrderButton" minWidth="-Infinity" disable="true" mnemonicParsing="false" onAction="#handleDeleteOrder" styleClass="compact-button" text="Delete Order" />
+                              <Button fx:id="undoStatusButton" minWidth="-Infinity" disable="true" mnemonicParsing="false" onAction="#handleUndoStatus" styleClass="compact-button" text="Undo Status" />
                            </children>
                         </HBox>
                         <HBox fx:id="releaseMessageBox" alignment="CENTER_LEFT" managed="false" spacing="6.0" visible="false">

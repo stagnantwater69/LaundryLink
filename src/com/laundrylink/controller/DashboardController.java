@@ -73,6 +73,7 @@ public class DashboardController {
     @FXML private Label flowWashingLabel;
     @FXML private Label flowProcessingLabel;
     @FXML private Label flowDryingLabel;
+    @FXML private Label flowIroningLabel;
     @FXML private Label flowReadyLabel;
 
     private final DashboardService dashboardService = new DashboardService();
@@ -163,6 +164,7 @@ public class DashboardController {
         flowReceivedLabel.setText(String.valueOf(stats.getReceivedCount()));
         flowWashingLabel.setText(String.valueOf(stats.getWashingCount()));
         flowDryingLabel.setText(String.valueOf(stats.getDryingCount()));
+        flowIroningLabel.setText(String.valueOf(stats.getIroningCount()));
         flowReadyLabel.setText(String.valueOf(stats.getReadyForPickup()));
         int processing = stats.getProcessingCount();
         flowProcessingLabel.setText(processing + (processing == 1 ? " order" : " orders"));
@@ -338,8 +340,9 @@ public class DashboardController {
                 + "   Orders released:      " + currentStats.getReleased() + "\n\n"
                 + "Current (as of now)\n"
                 + "   Received:             " + currentStats.getReceivedCount() + "\n"
-                + "   Washing / Drying:     " + currentStats.getWashingCount()
-                + " / " + currentStats.getDryingCount() + "\n"
+                + "   Washing:              " + currentStats.getWashingCount() + "\n"
+                + "   Drying:               " + currentStats.getDryingCount() + "\n"
+                + "   Ironing:              " + currentStats.getIroningCount() + "\n"
                 + "   Ready for pickup:     " + currentStats.getReadyForPickup() + "\n"
                 + "   Outstanding balance:  " + MoneyFormat.php(currentStats.getOutstandingBalance()) + "\n\n"
                 + "Payments collected include payments for orders received on earlier days.");

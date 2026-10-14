@@ -10,6 +10,7 @@ import com.laundrylink.model.OrderItemLine;
 import com.laundrylink.model.OrderStatus;
 import com.laundrylink.model.OrderSummary;
 import com.laundrylink.model.ServiceOption;
+import com.laundrylink.model.StatusChange;
 import com.laundrylink.util.SessionContext;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -31,6 +32,8 @@ public class OrderService {
 
     private static final BigDecimal MAX_QUANTITY = new BigDecimal("9999.99");
     private static final int ORDER_LIST_LIMIT = 2000;
+    /** How long staff can undo a status change; owners can always undo. */
+    public static final int STAFF_UNDO_MINUTES = 10;
 
     private final OrderDAO orderDAO = new OrderDAO();
     private final LaundryServiceDAO laundryServiceDAO = new LaundryServiceDAO();
@@ -305,8 +308,14 @@ public class OrderService {
 
     // ---- Status ----
 
-    /** Moves the order to its next stage and records who did it. */
-    public OrderDetails advanceStatus(int orderId) throws ServiceException, SQLException {
+    /**
+     * Moves the order forward to the picked stage and records who did it.
+     * Stages the order doesn't need (e.g. Washing for ironing only) can be skipped; going back can't.
+     */
+    public OrderDetails updateStatus(int orderId, OrderStatus next) throws ServiceException, SQLException {
+        if (next == null) {
+            throw new ServiceException("Please choose the new status.");
+        }
         int userId = SessionContext.getCurrentUserId();
         int shopId = SessionContext.getCurrentShopId();
         Connection connection = null;
@@ -314,26 +323,59 @@ public class OrderService {
             connection = ConnectionFactory.getConnection();
             connection.setAutoCommit(false);
             OrderDAO.LockedOrder order = requireOrder(connection, shopId, orderId);
-            OrderStatus next;
-            switch (order.getStatus()) {
-                case RECEIVED:
-                    next = OrderStatus.WASHING;
-                    break;
-                case WASHING:
-                    next = OrderStatus.DRYING;
-                    break;
-                case DRYING:
-                    next = OrderStatus.READY_FOR_PICKUP;
-                    break;
-                case READY_FOR_PICKUP:
-                    throw new ServiceException("This order is ready for pickup. Use Release Order when the "
-                            + "customer collects it.");
-                default:
-                    throw new ServiceException("This order is " + order.getStatus().getDisplayName()
-                            + " and its status can no longer change.");
+            OrderStatus current = order.getStatus();
+            if (current == OrderStatus.READY_FOR_PICKUP) {
+                throw new ServiceException("This order is ready for pickup. Use Release Order when the "
+                        + "customer collects it.");
+            }
+            if (current.nextStages().isEmpty()) {
+                throw new ServiceException("This order is " + current.getDisplayName()
+                        + " and its status can no longer change.");
+            }
+            if (!current.nextStages().contains(next)) {
+                throw new ServiceException("This order is already " + current.getDisplayName()
+                        + ". It can't go back to " + next.getDisplayName() + ".");
             }
             orderDAO.updateStatus(connection, orderId, next);
             orderDAO.insertStatusHistory(connection, orderId, userId, next);
+            connection.commit();
+        } catch (SQLException e) {
+            DbUtil.rollbackQuietly(connection);
+            throw e;
+        } catch (ServiceException e) {
+            DbUtil.rollbackQuietly(connection);
+            throw e;
+        } finally {
+            DbUtil.closeQuietly(connection);
+        }
+        return loadOrder(orderId);
+    }
+
+    /**
+     * Fixes a wrong Update Status: moves the order back to the stage it had before
+     * the last change, and records it as an undo. Owners can always undo; staff only
+     * within STAFF_UNDO_MINUTES. An undo itself can't be undone.
+     */
+    public OrderDetails undoLastStatus(int orderId) throws ServiceException, SQLException {
+        int userId = SessionContext.getCurrentUserId();
+        int shopId = SessionContext.getCurrentShopId();
+        Connection connection = null;
+        try {
+            connection = ConnectionFactory.getConnection();
+            connection.setAutoCommit(false);
+            OrderDAO.LockedOrder order = requireOrder(connection, shopId, orderId);
+            List<StatusChange> history = orderDAO.findStatusHistory(connection, orderId);
+            OrderStatus previous = OrderDetails.undoTarget(order.getStatus(), history);
+            if (previous == null) {
+                throw new ServiceException(OrderDetails.undoBlockReason(order.getStatus(), history));
+            }
+            if (!SessionContext.isAdmin()
+                    && orderDAO.secondsSinceLastChange(connection, orderId) > STAFF_UNDO_MINUTES * 60L) {
+                throw new ServiceException("Staff can only undo within " + STAFF_UNDO_MINUTES
+                        + " minutes of the change. Please ask the owner to undo it.");
+            }
+            orderDAO.updateStatus(connection, orderId, previous);
+            orderDAO.insertStatusHistory(connection, orderId, userId, previous, true);
             connection.commit();
         } catch (SQLException e) {
             DbUtil.rollbackQuietly(connection);
