@@ -1,7 +1,9 @@
 package com.laundrylink.controller;
 
 import com.laundrylink.model.LaundryService;
+import com.laundrylink.model.OrderStatus;
 import com.laundrylink.model.PricingUnit;
+import com.laundrylink.model.ServicePreset;
 import com.laundrylink.service.ServiceCatalogService;
 import com.laundrylink.util.AppShell;
 import com.laundrylink.util.BackgroundTask;
@@ -10,14 +12,17 @@ import com.laundrylink.util.MoneyFormat;
 import com.laundrylink.util.SessionContext;
 import com.laundrylink.util.Sprites;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
@@ -61,6 +66,8 @@ public class ServicesPricesController {
     @FXML
     private TableColumn<LaundryService, String> pricingUnitColumn;
     @FXML
+    private TableColumn<LaundryService, String> stagesColumn;
+    @FXML
     private TableColumn<LaundryService, String> priceColumn;
     @FXML
     private TableColumn<LaundryService, String> statusColumn;
@@ -73,7 +80,13 @@ public class ServicesPricesController {
     @FXML
     private ImageView serviceSpriteImage;
     @FXML
-    private TextField serviceNameField;
+    private ComboBox<String> serviceNameComboBox;
+    @FXML
+    private CheckBox washingCheckBox;
+    @FXML
+    private CheckBox dryingCheckBox;
+    @FXML
+    private CheckBox ironingCheckBox;
     @FXML
     private ComboBox<PricingUnit> pricingUnitComboBox;
     @FXML
@@ -118,6 +131,8 @@ public class ServicesPricesController {
                 new ReadOnlyStringWrapper(cell.getValue().getServiceName()));
         pricingUnitColumn.setCellValueFactory(cell ->
                 new ReadOnlyStringWrapper(cell.getValue().getPricingUnit().getDisplayName()));
+        stagesColumn.setCellValueFactory(cell ->
+                new ReadOnlyStringWrapper(cell.getValue().getStagesText()));
         priceColumn.setCellValueFactory(cell ->
                 new ReadOnlyStringWrapper(MoneyFormat.php(cell.getValue().getCurrentPrice())));
         statusColumn.setCellValueFactory(cell -> new ReadOnlyStringWrapper(
@@ -152,6 +167,7 @@ public class ServicesPricesController {
             }
         });
         pricingUnitColumn.setCellFactory(column -> centeredCell());
+        stagesColumn.setCellFactory(column -> centeredCell());
         priceColumn.setCellFactory(column -> centeredCell());
 
         statusColumn.setCellFactory(column -> new TableCell<LaundryService, String>() {
@@ -231,8 +247,10 @@ public class ServicesPricesController {
 
         pricingUnitComboBox.setItems(FXCollections.observableArrayList(PricingUnit.values()));
         // Preview the sprite the service will get, picked from words in its name.
-        serviceNameField.textProperty().addListener((obs, oldName, newName) ->
+        serviceNameComboBox.getEditor().textProperty().addListener((obs, oldName, newName) ->
                 serviceSpriteImage.setImage(Sprites.service(newName)));
+        // Picking a ready-made service fills in its unit and stages; the owner adds the price.
+        serviceNameComboBox.valueProperty().addListener((obs, oldName, newName) -> applyPreset(newName));
         serviceSpriteImage.setImage(Sprites.service(""));
         servicesTable.getSelectionModel().selectedItemProperty()
                 .addListener((obs, oldService, newService) -> showInForm(newService));
@@ -242,15 +260,77 @@ public class ServicesPricesController {
     @FXML
     private void handleNew() {
         clearForm();
-        serviceNameField.requestFocus();
+        serviceNameComboBox.requestFocus();
+    }
+
+    /** Ready-made services the shop doesn't have yet (plus the one being edited). */
+    private void showPresetChoices(LaundryService editing) {
+        List<String> names = new ArrayList<>();
+        for (ServicePreset preset : ServicePreset.ALL) {
+            boolean taken = false;
+            for (LaundryService service : services) {
+                if (service != editing && service.getServiceName().equalsIgnoreCase(preset.getName())) {
+                    taken = true;
+                }
+            }
+            if (!taken) {
+                names.add(preset.getName());
+            }
+        }
+        String typed = serviceNameText();
+        serviceNameComboBox.setItems(FXCollections.observableArrayList(names));
+        serviceNameComboBox.getEditor().setText(typed);
+    }
+
+    /** Fills the unit and stages when a ready-made service is picked (only for new services). */
+    private void applyPreset(String name) {
+        ServicePreset preset = ServicePreset.find(name);
+        if (preset == null || selectedService != null) {
+            return;
+        }
+        pricingUnitComboBox.setValue(preset.getPricingUnit());
+        showStages(preset.getStages());
+        // Move to Price only after the dropdown finishes updating. Moving focus right away
+        // makes the editable dropdown save its old text, so a second pick snapped back to the first.
+        Platform.runLater(priceField::requestFocus);
+    }
+
+    /** Ticks the stage boxes. */
+    private void showStages(List<OrderStatus> stages) {
+        washingCheckBox.setSelected(stages.contains(OrderStatus.WASHING));
+        dryingCheckBox.setSelected(stages.contains(OrderStatus.DRYING));
+        ironingCheckBox.setSelected(stages.contains(OrderStatus.IRONING));
+    }
+
+    /** The ticked stages. */
+    private List<OrderStatus> selectedStages() {
+        List<OrderStatus> stages = new ArrayList<>();
+        if (washingCheckBox.isSelected()) {
+            stages.add(OrderStatus.WASHING);
+        }
+        if (dryingCheckBox.isSelected()) {
+            stages.add(OrderStatus.DRYING);
+        }
+        if (ironingCheckBox.isSelected()) {
+            stages.add(OrderStatus.IRONING);
+        }
+        return stages;
+    }
+
+    /** The typed or picked service name. */
+    private String serviceNameText() {
+        return serviceNameComboBox.getEditor().getText();
     }
 
     private void clearForm() {
         selectedService = null;
         servicesTable.getSelectionModel().clearSelection();
         formTitleLabel.setText("New Service");
-        serviceNameField.clear();
+        showPresetChoices(null);
+        serviceNameComboBox.setValue(null);
+        serviceNameComboBox.getEditor().clear();
         pricingUnitComboBox.setValue(null);
+        showStages(new ArrayList<OrderStatus>());
         priceField.clear();
         formHintLabel.setText("New services are active by default and can be used in new orders right away.");
         showFormStatus(true, "Active by default (available for new orders)");
@@ -267,8 +347,11 @@ public class ServicesPricesController {
         }
         selectedService = service;
         formTitleLabel.setText("Edit Service");
-        serviceNameField.setText(service.getServiceName());
+        showPresetChoices(service);
+        serviceNameComboBox.setValue(service.getServiceName());
+        serviceNameComboBox.getEditor().setText(service.getServiceName());
         pricingUnitComboBox.setValue(service.getPricingUnit());
+        showStages(service.getStages());
         priceField.setText(service.getCurrentPrice().toPlainString());
         formHintLabel.setText("Price changes apply to new orders. Existing orders retain their original prices.");
         showFormStatus(service.isActive(), service.isActive()
@@ -307,13 +390,14 @@ public class ServicesPricesController {
             return;
         }
 
+        String name = serviceNameText();
+        List<OrderStatus> stages = selectedStages();
         Dialogs.clearMessage(formMessageLabel);
         setFormBusy(true);
         BackgroundTask.run(() -> serviceToUpdate == null
-                ? serviceCatalogService.createService(
-                        serviceNameField.getText(), selectedUnit, price)
+                ? serviceCatalogService.createService(name, selectedUnit, price, stages)
                 : serviceCatalogService.updateService(
-                        serviceToUpdate.getId(), serviceNameField.getText(), selectedUnit, price),
+                        serviceToUpdate.getId(), name, selectedUnit, price, stages),
                 saved -> {
                     setFormBusy(false);
                     Dialogs.showSuccess(formMessageLabel,
@@ -381,8 +465,11 @@ public class ServicesPricesController {
         cancelButton.setDisable(busy);
         saveButton.setDisable(busy);
         statusButton.setDisable(busy);
-        serviceNameField.setDisable(busy);
+        serviceNameComboBox.setDisable(busy);
         pricingUnitComboBox.setDisable(busy);
+        washingCheckBox.setDisable(busy);
+        dryingCheckBox.setDisable(busy);
+        ironingCheckBox.setDisable(busy);
         priceField.setDisable(busy);
         saveButton.setText(busy
                 ? (selectedService == null ? "Adding..." : "Saving...")
@@ -402,6 +489,9 @@ public class ServicesPricesController {
                 (List<LaundryService> loaded) -> {
                     refreshButton.setDisable(false);
                     services.setAll(loaded);
+                    if (SessionContext.isAdmin()) {
+                        showPresetChoices(selectedService);
+                    }
                     applyFilters();
                     selectById(selectServiceId);
                     AppShell.setStatus("Ready. " + loaded.size() + " service"

@@ -4,11 +4,14 @@ import com.laundrylink.config.DatabaseConfig;
 import com.laundrylink.service.ServiceException;
 import java.net.URL;
 import java.sql.SQLException;
+import java.util.List;
+import javafx.collections.FXCollections;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
@@ -62,6 +65,23 @@ public final class Dialogs {
         alert.showAndWait();
         ButtonType answer = alert.getResult();
         return answer != null && answer.getButtonData() == ButtonBar.ButtonData.OK_DONE;
+    }
+
+    /** Question with a dropdown; returns the picked option, or null if the user goes back. */
+    public static <T> T choose(String title, String message, List<T> options, T startWith) {
+        Alert alert = createAlert(Alert.AlertType.CONFIRMATION, KIND_QUESTION, title, message);
+        ComboBox<T> choices = new ComboBox<>(FXCollections.observableArrayList(options));
+        choices.setMaxWidth(Double.MAX_VALUE);
+        if (startWith != null && options.contains(startWith)) {
+            choices.setValue(startWith);
+        } else if (!options.isEmpty()) {
+            choices.getSelectionModel().selectFirst();
+        }
+        ((VBox) alert.getDialogPane().getContent()).getChildren().add(choices);
+        alert.showAndWait();
+        ButtonType answer = alert.getResult();
+        boolean ok = answer != null && answer.getButtonData() == ButtonBar.ButtonData.OK_DONE;
+        return ok ? choices.getValue() : null;
     }
 
     /** Rule mistakes show under the form; anything unexpected (like the database being down) shows in a pop-up. */

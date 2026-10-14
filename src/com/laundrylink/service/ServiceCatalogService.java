@@ -3,12 +3,14 @@ package com.laundrylink.service;
 import com.laundrylink.config.ConnectionFactory;
 import com.laundrylink.dao.LaundryServiceDAO;
 import com.laundrylink.model.LaundryService;
+import com.laundrylink.model.OrderStatus;
 import com.laundrylink.model.PricingUnit;
 import com.laundrylink.model.User;
 import com.laundrylink.util.SessionContext;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -47,19 +49,20 @@ public class ServiceCatalogService {
     }
 
     /** Creates an active laundry service. Owner only. */
-    public LaundryService createService(String serviceName, PricingUnit pricingUnit, BigDecimal price)
-            throws ServiceException, SQLException {
+    public LaundryService createService(String serviceName, PricingUnit pricingUnit, BigDecimal price,
+            List<OrderStatus> stages) throws ServiceException, SQLException {
         int shopId = SessionContext.requireAdmin().getShopId();
         String cleanName = requireServiceName(serviceName);
         PricingUnit cleanUnit = requirePricingUnit(pricingUnit);
         BigDecimal cleanPrice = requirePrice(price);
+        List<OrderStatus> cleanStages = requireStages(stages);
 
         try {
             return TransactionHelper.inTransaction(connection -> {
                 if (laundryServiceDAO.serviceNameExists(connection, shopId, cleanName, 0)) {
                     throw new ServiceException("A service named \"" + cleanName + "\" already exists.");
                 }
-                int id = laundryServiceDAO.insert(connection, shopId, cleanName, cleanUnit, cleanPrice);
+                int id = laundryServiceDAO.insert(connection, shopId, cleanName, cleanUnit, cleanPrice, cleanStages);
                 return laundryServiceDAO.findById(connection, shopId, id);
             });
         } catch (SQLException e) {
@@ -72,7 +75,8 @@ public class ServiceCatalogService {
 
     /** Updates a service's current catalog details. Owner only. */
     public LaundryService updateService(int serviceId, String serviceName,
-            PricingUnit pricingUnit, BigDecimal price) throws ServiceException, SQLException {
+            PricingUnit pricingUnit, BigDecimal price, List<OrderStatus> stages)
+            throws ServiceException, SQLException {
         int shopId = SessionContext.requireAdmin().getShopId();
         if (serviceId <= 0) {
             throw new ServiceException("Select a service to update.");
@@ -81,6 +85,7 @@ public class ServiceCatalogService {
         String cleanName = requireServiceName(serviceName);
         PricingUnit cleanUnit = requirePricingUnit(pricingUnit);
         BigDecimal cleanPrice = requirePrice(price);
+        List<OrderStatus> cleanStages = requireStages(stages);
 
         try {
             return TransactionHelper.inTransaction(connection -> {
@@ -91,7 +96,8 @@ public class ServiceCatalogService {
                 if (laundryServiceDAO.serviceNameExists(connection, shopId, cleanName, serviceId)) {
                     throw new ServiceException("A service named \"" + cleanName + "\" already exists.");
                 }
-                if (!laundryServiceDAO.update(connection, shopId, serviceId, cleanName, cleanUnit, cleanPrice)) {
+                if (!laundryServiceDAO.update(connection, shopId, serviceId, cleanName, cleanUnit, cleanPrice,
+                        cleanStages)) {
                     throw new ServiceException("That service could not be updated. Refresh the list.");
                 }
                 return laundryServiceDAO.findById(connection, shopId, serviceId);
@@ -144,6 +150,21 @@ public class ServiceCatalogService {
             throw new ServiceException("Select a pricing unit.");
         }
         return pricingUnit;
+    }
+
+    /** Keeps only work stages (Washing, Drying, Ironing). None is allowed, e.g. for sent-out dry cleaning. */
+    static List<OrderStatus> requireStages(List<OrderStatus> stages) {
+        List<OrderStatus> clean = new ArrayList<>();
+        if (stages != null) {
+            for (OrderStatus stage : OrderStatus.values()) {
+                boolean workStage = stage == OrderStatus.WASHING || stage == OrderStatus.DRYING
+                        || stage == OrderStatus.IRONING;
+                if (workStage && stages.contains(stage)) {
+                    clean.add(stage);
+                }
+            }
+        }
+        return clean;
     }
 
     static BigDecimal requirePrice(BigDecimal price) throws ServiceException {

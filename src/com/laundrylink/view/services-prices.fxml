@@ -5,6 +5,7 @@
 <?import java.net.URL?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Separator?>
@@ -90,6 +91,7 @@
                            <columns>
                               <TableColumn fx:id="serviceNameColumn" prefWidth="260.0" text="Service" />
                               <TableColumn fx:id="pricingUnitColumn" prefWidth="130.0" text="Unit" />
+                              <TableColumn fx:id="stagesColumn" prefWidth="170.0" text="Stages" />
                               <TableColumn fx:id="priceColumn" prefWidth="120.0" text="Price" />
                               <TableColumn fx:id="statusColumn" prefWidth="120.0" text="Status" />
                            </columns>
@@ -124,18 +126,26 @@
                            </columnConstraints>
                            <children>
                               <Label minWidth="-Infinity" styleClass="form-row-label" text="Service Name" />
-                              <TextField fx:id="serviceNameField" promptText="e.g. Wash, Dry &amp; Fold" GridPane.columnIndex="1" />
+                              <ComboBox fx:id="serviceNameComboBox" editable="true" maxWidth="1.7976931348623157E308" promptText="Pick a service or type a new name" GridPane.columnIndex="1" />
                               <Label minWidth="-Infinity" styleClass="form-row-label" text="Pricing Unit" GridPane.rowIndex="1" />
                               <ComboBox fx:id="pricingUnitComboBox" maxWidth="1.7976931348623157E308" promptText="Select a pricing unit" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                              <Label minWidth="-Infinity" styleClass="form-row-label" text="Price" GridPane.rowIndex="2" />
-                              <HBox alignment="CENTER_LEFT" spacing="8.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                              <Label minWidth="-Infinity" styleClass="form-row-label" text="Stages" GridPane.rowIndex="2" />
+                              <HBox alignment="CENTER_LEFT" spacing="14.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                                 <children>
+                                    <CheckBox fx:id="washingCheckBox" mnemonicParsing="false" text="Washing" />
+                                    <CheckBox fx:id="dryingCheckBox" mnemonicParsing="false" text="Drying" />
+                                    <CheckBox fx:id="ironingCheckBox" mnemonicParsing="false" text="Ironing" />
+                                 </children>
+                              </HBox>
+                              <Label minWidth="-Infinity" styleClass="form-row-label" text="Price" GridPane.rowIndex="3" />
+                              <HBox alignment="CENTER_LEFT" spacing="8.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
                                  <children>
                                     <Label styleClass="currency-prefix" text="PHP" />
                                     <TextField fx:id="priceField" promptText="e.g. 65.00" HBox.hgrow="ALWAYS" />
                                  </children>
                               </HBox>
-                              <Label minWidth="-Infinity" styleClass="form-row-label" text="Status" GridPane.rowIndex="3" />
-                              <Label fx:id="statusValueLabel" styleClass="status-value" text="Active (available for new orders)" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                              <Label minWidth="-Infinity" styleClass="form-row-label" text="Status" GridPane.rowIndex="4" />
+                              <Label fx:id="statusValueLabel" styleClass="status-value" text="Active (available for new orders)" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="4">
                                  <graphic>
                                     <Circle fx:id="statusDot" radius="6.0" styleClass="status-dot,active" />
                                  </graphic>

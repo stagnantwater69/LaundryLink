@@ -1,6 +1,7 @@
 package com.laundrylink.dao;
 
 import com.laundrylink.model.LaundryService;
+import com.laundrylink.model.OrderStatus;
 import com.laundrylink.model.PricingUnit;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -18,7 +19,8 @@ import java.util.List;
 public class LaundryServiceDAO {
 
     private static final String COLUMNS =
-            "id, service_name, pricing_unit, current_price, is_active, created_at";
+            "id, service_name, pricing_unit, current_price, is_active, created_at,"
+            + " needs_washing, needs_drying, needs_ironing";
 
     /** Returns every service for the owner's management screen. */
     public List<LaundryService> findAll(Connection connection, int shopId) throws SQLException {
@@ -60,14 +62,15 @@ public class LaundryServiceDAO {
     }
 
     public int insert(Connection connection, int shopId, String serviceName, PricingUnit pricingUnit,
-            java.math.BigDecimal currentPrice) throws SQLException {
-        String sql = "INSERT INTO services (shop_id, service_name, pricing_unit, current_price, is_active)"
-                + " VALUES (?, ?, ?, ?, 1)";
+            java.math.BigDecimal currentPrice, List<OrderStatus> stages) throws SQLException {
+        String sql = "INSERT INTO services (shop_id, service_name, pricing_unit, current_price, is_active,"
+                + " needs_washing, needs_drying, needs_ironing) VALUES (?, ?, ?, ?, 1, ?, ?, ?)";
         try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             statement.setInt(1, shopId);
             statement.setString(2, serviceName);
             statement.setString(3, pricingUnit.name());
             statement.setBigDecimal(4, currentPrice);
+            setStages(statement, 5, stages);
             statement.executeUpdate();
             try (ResultSet keys = statement.getGeneratedKeys()) {
                 if (keys.next()) {
@@ -79,15 +82,18 @@ public class LaundryServiceDAO {
     }
 
     public boolean update(Connection connection, int shopId, int id, String serviceName,
-            PricingUnit pricingUnit, java.math.BigDecimal currentPrice) throws SQLException {
-        String sql = "UPDATE services SET service_name = ?, pricing_unit = ?, current_price = ?"
+            PricingUnit pricingUnit, java.math.BigDecimal currentPrice, List<OrderStatus> stages)
+            throws SQLException {
+        String sql = "UPDATE services SET service_name = ?, pricing_unit = ?, current_price = ?,"
+                + " needs_washing = ?, needs_drying = ?, needs_ironing = ?"
                 + " WHERE id = ? AND shop_id = ?";
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, serviceName);
             statement.setString(2, pricingUnit.name());
             statement.setBigDecimal(3, currentPrice);
-            statement.setInt(4, id);
-            statement.setInt(5, shopId);
+            setStages(statement, 4, stages);
+            statement.setInt(7, id);
+            statement.setInt(8, shopId);
             return statement.executeUpdate() == 1;
         }
     }
@@ -116,6 +122,14 @@ public class LaundryServiceDAO {
         return services;
     }
 
+    /** Fills the three needs_* parameters, starting at the given index. */
+    private static void setStages(PreparedStatement statement, int firstIndex, List<OrderStatus> stages)
+            throws SQLException {
+        statement.setBoolean(firstIndex, stages.contains(OrderStatus.WASHING));
+        statement.setBoolean(firstIndex + 1, stages.contains(OrderStatus.DRYING));
+        statement.setBoolean(firstIndex + 2, stages.contains(OrderStatus.IRONING));
+    }
+
     private LaundryService mapRow(ResultSet rs) throws SQLException {
         Timestamp createdAt = rs.getTimestamp("created_at");
         return new LaundryService(
@@ -124,6 +138,22 @@ public class LaundryServiceDAO {
                 PricingUnit.valueOf(rs.getString("pricing_unit")),
                 rs.getBigDecimal("current_price"),
                 rs.getBoolean("is_active"),
-                createdAt == null ? null : createdAt.toLocalDateTime());
+                createdAt == null ? null : createdAt.toLocalDateTime(),
+                stagesOf(rs));
+    }
+
+    /** Reads the needs_* columns as a stage list. */
+    private static List<OrderStatus> stagesOf(ResultSet rs) throws SQLException {
+        List<OrderStatus> stages = new ArrayList<>();
+        if (rs.getBoolean("needs_washing")) {
+            stages.add(OrderStatus.WASHING);
+        }
+        if (rs.getBoolean("needs_drying")) {
+            stages.add(OrderStatus.DRYING);
+        }
+        if (rs.getBoolean("needs_ironing")) {
+            stages.add(OrderStatus.IRONING);
+        }
+        return stages;
     }
 }

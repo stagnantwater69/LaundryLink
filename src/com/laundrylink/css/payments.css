@@ -81,3 +81,82 @@
 .button:disabled .icon-cancel {
     -fx-fill: -ll-outline;
 }
+
+/* ---- Redesigned layout ---- */
+
+/* Smaller totals strip */
+.stat-card.pay-stat {
+    -fx-padding: 0.429em 0.857em;
+}
+
+/* Payment Records / Order History tabs in the card header */
+.card-header.card-tabs {
+    -fx-padding: 0.429em 0.857em 0 0.857em;
+}
+
+.toggle-button.card-tab {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-text-fill: #cfdcd6;
+    -fx-font-size: 1.143em;
+    -fx-font-weight: bold;
+    -fx-padding: 0.357em 1em 0.429em 1em;
+    -fx-cursor: hand;
+}
+
+.toggle-button.card-tab:hover {
+    -fx-text-fill: #f7f3e3;
+}
+
+.toggle-button.card-tab:selected {
+    -fx-background-color: -ll-cream;
+    -fx-text-fill: -ll-teal;
+}
+
+/* Record Payment card */
+.cash-only-tag {
+    -fx-text-fill: #f7f3e3;
+    -fx-font-size: 0.929em;
+    -fx-font-style: italic;
+    -fx-graphic-text-gap: 6;
+}
+
+.cash-only-tag .cash-bill {
+    -fx-fill: #8fd694;
+    -fx-stroke: transparent;
+}
+
+.detail-label.muted-label {
+    -fx-text-fill: -ll-muted;
+}
+
+.total-box {
+    -fx-background-color: -ll-outline, -ll-paper;
+    -fx-background-insets: 0, 1;
+    -fx-padding: 0.357em 0.286em;
+    -fx-spacing: 1;
+}
+
+.total-box.balance {
+    -fx-background-color: -ll-burgundy, #f6e9e4;
+    -fx-background-insets: 0, 1.5;
+}
+
+.total-caption {
+    -fx-font-size: 0.857em;
+    -fx-text-fill: -ll-muted;
+}
+
+.total-value {
+    -fx-font-size: 1.143em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ll-ink;
+}
+
+.total-box.balance .total-value {
+    -fx-text-fill: -ll-burgundy;
+}
+
+.total-value.paid {
+    -fx-text-fill: #1f6b3a;
+}

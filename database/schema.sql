@@ -88,6 +88,8 @@ CREATE TABLE IF NOT EXISTS customers (
 -- services: each shop's services and current prices.
 -- KG = priced per kilo, PIECE = priced per item.
 -- Inactive services stay on old orders but can't be added to new ones.
+-- needs_* = the work stages the service goes through; Update Status uses
+-- them to suggest the next stage and warn when one is skipped.
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS services (
     id             INT UNSIGNED   NOT NULL AUTO_INCREMENT,
@@ -96,6 +98,9 @@ CREATE TABLE IF NOT EXISTS services (
     pricing_unit   ENUM('KG', 'PIECE') NOT NULL,
     current_price  DECIMAL(10,2)  NOT NULL,
     is_active      TINYINT(1)     NOT NULL DEFAULT 1,
+    needs_washing  TINYINT(1)     NOT NULL DEFAULT 0,
+    needs_drying   TINYINT(1)     NOT NULL DEFAULT 0,
+    needs_ironing  TINYINT(1)     NOT NULL DEFAULT 0,
     created_at     DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     CONSTRAINT uq_services_shop_name UNIQUE (shop_id, service_name),
@@ -123,7 +128,7 @@ CREATE TABLE IF NOT EXISTS orders (
     created_by                INT UNSIGNED   NOT NULL,
     received_at               DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expected_completion_date  DATE           NULL,
-    laundry_status            ENUM('RECEIVED', 'WASHING', 'DRYING', 'READY_FOR_PICKUP', 'RELEASED', 'CANCELLED')
+    laundry_status            ENUM('RECEIVED', 'WASHING', 'DRYING', 'IRONING', 'READY_FOR_PICKUP', 'RELEASED', 'CANCELLED')
                                              NOT NULL DEFAULT 'RECEIVED',
     total_amount              DECIMAL(12,2)  NOT NULL DEFAULT 0.00,
     notes                     VARCHAR(500)   NULL,
@@ -191,12 +196,14 @@ CREATE TABLE IF NOT EXISTS payments (
 -- ---------------------------------------------------------------------
 -- order_status_history: who moved an order to which stage, and when.
 -- Each row is the stage the order moved INTO. The first row is always RECEIVED.
+-- is_undo = 1 marks an Undo Status correction back to an earlier stage.
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS order_status_history (
     id          INT UNSIGNED  NOT NULL AUTO_INCREMENT,
     order_id    INT UNSIGNED  NOT NULL,
     changed_by  INT UNSIGNED  NOT NULL,
-    status      ENUM('RECEIVED', 'WASHING', 'DRYING', 'READY_FOR_PICKUP', 'RELEASED', 'CANCELLED') NOT NULL,
+    status      ENUM('RECEIVED', 'WASHING', 'DRYING', 'IRONING', 'READY_FOR_PICKUP', 'RELEASED', 'CANCELLED') NOT NULL,
+    is_undo     TINYINT(1)    NOT NULL DEFAULT 0,
     changed_at  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     INDEX idx_status_history_order (order_id, changed_at),

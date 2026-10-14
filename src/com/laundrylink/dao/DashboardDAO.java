@@ -52,9 +52,10 @@ public class DashboardDAO {
         int received = 0;
         int washing = 0;
         int drying = 0;
+        int ironing = 0;
         int ready = 0;
         String countsSql = "SELECT laundry_status, COUNT(*) FROM orders"
-                + " WHERE shop_id = ? AND laundry_status IN ('RECEIVED', 'WASHING', 'DRYING', 'READY_FOR_PICKUP')"
+                + " WHERE shop_id = ? AND laundry_status IN ('RECEIVED', 'WASHING', 'DRYING', 'IRONING', 'READY_FOR_PICKUP')"
                 + " GROUP BY laundry_status";
         try (PreparedStatement statement = connection.prepareStatement(countsSql)) {
             statement.setInt(1, shopId);
@@ -71,6 +72,9 @@ public class DashboardDAO {
                     case DRYING:
                         drying = count;
                         break;
+                    case IRONING:
+                        ironing = count;
+                        break;
                     default:
                         ready = count;
                         break;
@@ -78,7 +82,7 @@ public class DashboardDAO {
             }
         }
         return new DashboardStats(ordersReceived, paymentsCollected, released, ready, outstanding,
-                received, washing, drying);
+                received, washing, drying, ironing);
     }
 
     /** Newest orders first (cancelled ones too, so they can still be found). */

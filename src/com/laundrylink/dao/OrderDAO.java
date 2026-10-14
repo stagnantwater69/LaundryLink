@@ -105,7 +105,8 @@ public class OrderDAO {
                         rs.getString("notes"),
                         rs.getString("created_by_name"),
                         findItems(connection, orderId),
-                        findStatusHistory(connection, orderId));
+                        findStatusHistory(connection, orderId),
+                        findNeededStages(connection, orderId));
             }
         }
     }
@@ -133,9 +134,34 @@ public class OrderDAO {
         return items;
     }
 
+    /** Work stages needed by any service on the order (from Services & Prices), in shop order. */
+    public List<OrderStatus> findNeededStages(Connection connection, int orderId) throws SQLException {
+        String sql = "SELECT MAX(s.needs_washing), MAX(s.needs_drying), MAX(s.needs_ironing)"
+                + " FROM order_items i JOIN services s ON s.id = i.service_id WHERE i.order_id = ?";
+        List<OrderStatus> stages = new ArrayList<>();
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, orderId);
+            try (ResultSet rs = statement.executeQuery()) {
+                if (rs.next()) {
+                    if (rs.getBoolean(1)) {
+                        stages.add(OrderStatus.WASHING);
+                    }
+                    if (rs.getBoolean(2)) {
+                        stages.add(OrderStatus.DRYING);
+                    }
+                    if (rs.getBoolean(3)) {
+                        stages.add(OrderStatus.IRONING);
+                    }
+                }
+            }
+        }
+        return stages;
+    }
+
     /** Oldest first, with the name of who made each change. */
     public List<StatusChange> findStatusHistory(Connection connection, int orderId) throws SQLException {
-        String sql = "SELECT h.changed_at, h.status, CONCAT_WS(' ', u.first_name, u.last_name) AS changed_by_name"
+        String sql = "SELECT h.changed_at, h.status, h.is_undo,"
+                + " CONCAT_WS(' ', u.first_name, u.last_name) AS changed_by_name"
                 + " FROM order_status_history h JOIN users u ON u.id = h.changed_by"
                 + " WHERE h.order_id = ? ORDER BY h.changed_at, h.id";
         List<StatusChange> history = new ArrayList<>();
@@ -146,7 +172,8 @@ public class OrderDAO {
                     history.add(new StatusChange(
                             rs.getObject("changed_at", LocalDateTime.class),
                             OrderStatus.valueOf(rs.getString("status")),
-                            rs.getString("changed_by_name")));
+                            rs.getString("changed_by_name"),
+                            rs.getBoolean("is_undo")));
                 }
             }
         }
@@ -309,12 +336,30 @@ public class OrderDAO {
     /** Records who moved the order to which stage. */
     public void insertStatusHistory(Connection connection, int orderId, int changedBy, OrderStatus status)
             throws SQLException {
+        insertStatusHistory(connection, orderId, changedBy, status, false);
+    }
+
+    /** Records a status change; undo = true marks a correction back to an earlier stage. */
+    public void insertStatusHistory(Connection connection, int orderId, int changedBy, OrderStatus status,
+            boolean undo) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
-                "INSERT INTO order_status_history (order_id, changed_by, status) VALUES (?, ?, ?)")) {
+                "INSERT INTO order_status_history (order_id, changed_by, status, is_undo) VALUES (?, ?, ?, ?)")) {
             statement.setInt(1, orderId);
             statement.setInt(2, changedBy);
             statement.setString(3, status.name());
+            statement.setBoolean(4, undo);
             statement.executeUpdate();
+        }
+    }
+
+    /** Seconds since the order's last status change, by the database clock. */
+    public long secondsSinceLastChange(Connection connection, int orderId) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(
+                "SELECT TIMESTAMPDIFF(SECOND, MAX(changed_at), NOW()) FROM order_status_history WHERE order_id = ?")) {
+            statement.setInt(1, orderId);
+            try (ResultSet rs = statement.executeQuery()) {
+                return rs.next() ? rs.getLong(1) : 0;
+            }
         }
     }
 
