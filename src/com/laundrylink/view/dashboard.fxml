@@ -327,7 +327,7 @@
                      <children>
                         <Label styleClass="stat-caption,processing-title" text="Processing:" />
                         <Label fx:id="flowProcessingLabel" styleClass="processing-count" text="0 orders" />
-                        <Label styleClass="stat-caption" text="(Washing + Drying)" />
+                        <Label styleClass="stat-caption" text="(Washing + Drying + Ironing)" />
                      </children>
                   </VBox>
                   <HBox alignment="CENTER" spacing="12.0" HBox.hgrow="ALWAYS">
@@ -341,6 +341,22 @@
                            <children>
                               <Label styleClass="workflow-title" text="Drying" />
                               <Label fx:id="flowDryingLabel" styleClass="workflow-count" text="0" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+                  <Separator orientation="VERTICAL" />
+                  <HBox alignment="CENTER" spacing="12.0" HBox.hgrow="ALWAYS">
+                     <children>
+                        <ImageView fitHeight="40.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@../images/service-iron.png" />
+                           </image>
+                        </ImageView>
+                        <VBox>
+                           <children>
+                              <Label styleClass="workflow-title" text="Ironing" />
+                              <Label fx:id="flowIroningLabel" styleClass="workflow-count" text="0" />
                            </children>
                         </VBox>
                      </children>

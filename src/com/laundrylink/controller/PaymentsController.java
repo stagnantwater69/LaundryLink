@@ -27,6 +27,8 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 
 /**
@@ -51,6 +53,10 @@ public class PaymentsController {
     @FXML private TableColumn<Payment, String> recordStatusColumn;
     @FXML private Label recordsPlaceholderLabel;
 
+    @FXML private ToggleButton recordsTabButton;
+    @FXML private ToggleButton historyTabButton;
+    @FXML private VBox recordsPane;
+    @FXML private VBox historyPane;
     @FXML private Label historyTitleLabel;
     @FXML private TableView<Payment> historyTable;
     @FXML private TableColumn<Payment, String> historyStatusColumn;
@@ -316,6 +322,28 @@ public class PaymentsController {
         confirmButton.setText(busy ? "Saving..." : "Confirm Payment");
     }
 
+    /** Payment Records tab: the selected day's payments. */
+    @FXML
+    private void handleShowRecords() {
+        showTablesTab(false);
+    }
+
+    /** Order History tab: every payment of the order in Record Payment. */
+    @FXML
+    private void handleShowHistory() {
+        showTablesTab(true);
+    }
+
+    /** Shows one of the two tables and keeps its tab selected. */
+    private void showTablesTab(boolean history) {
+        recordsTabButton.setSelected(!history);
+        historyTabButton.setSelected(history);
+        recordsPane.setVisible(!history);
+        recordsPane.setManaged(!history);
+        historyPane.setVisible(history);
+        historyPane.setManaged(history);
+    }
+
     /** Cancel button: clears the form. */
     @FXML
     private void handleCancel() {
@@ -329,6 +357,7 @@ public class PaymentsController {
         selectInCombo(order.getId());
 
         historyTitleLabel.setText("Payment History (Selected Order: " + order.getOrderNumber() + ")");
+        historyTabButton.setText("Order History (" + order.getOrderNumber() + ")");
         customerLabel.setText(order.getCustomerName());
         serviceLabel.setText(order.getServices().isEmpty() ? "—" : order.getServices());
         quantityLabel.setText(order.getQuantityText().isEmpty() ? "—" : order.getQuantityText());
@@ -362,6 +391,7 @@ public class PaymentsController {
         Dialogs.clearMessage(formMessageLabel);
 
         historyTitleLabel.setText("Payment History (Selected Order: —)");
+        historyTabButton.setText("Order History");
         historyTable.setItems(FXCollections.<Payment>observableArrayList());
         historyPlaceholderLabel.setText("Select an order to see its payments.");
 

@@ -8,15 +8,16 @@ USE laundrylink;
 
 SET @shop = (SELECT MIN(id) FROM shops);
 
-INSERT IGNORE INTO services (shop_id, service_name, pricing_unit, current_price, is_active) VALUES
-    (@shop, 'Wash, Dry, and Fold',   'KG',    65.00, 1),
-    (@shop, 'Wash Only',             'KG',    40.00, 1),
-    (@shop, 'Dry Only',              'KG',    35.00, 1),
-    (@shop, 'Ironing',               'PIECE', 15.00, 1),
-    (@shop, 'Comforter / Blanket',   'PIECE', 150.00, 1),
-    (@shop, 'Curtains',              'KG',    80.00, 1),
-    (@shop, 'Dry Cleaning (Barong)', 'PIECE', 250.00, 1),
-    (@shop, 'Stain Removal',         'PIECE', 30.00, 0);
+INSERT IGNORE INTO services (shop_id, service_name, pricing_unit, current_price, is_active,
+                             needs_washing, needs_drying, needs_ironing) VALUES
+    (@shop, 'Wash, Dry, and Fold',   'KG',    65.00, 1, 1, 1, 0),
+    (@shop, 'Wash Only',             'KG',    40.00, 1, 1, 0, 0),
+    (@shop, 'Dry Only',              'KG',    35.00, 1, 0, 1, 0),
+    (@shop, 'Ironing',               'PIECE', 15.00, 1, 0, 0, 1),
+    (@shop, 'Comforter / Blanket',   'PIECE', 150.00, 1, 1, 1, 0),
+    (@shop, 'Curtains',              'KG',    80.00, 1, 1, 1, 0),
+    (@shop, 'Dry Cleaning (Barong)', 'PIECE', 250.00, 1, 0, 0, 0),
+    (@shop, 'Stain Removal',         'PIECE', 30.00, 0, 1, 0, 0);
 
 INSERT INTO customers (shop_id, first_name, middle_name, last_name, contact_number, address)
 SELECT @shop, demo.* FROM (

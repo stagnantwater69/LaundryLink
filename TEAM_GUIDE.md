@@ -250,11 +250,13 @@ public void showOrder(int orderId)     // loads that order's history and current
 ```
 
 **Rules:**
-- **Order of stages:** RECEIVED → WASHING → DRYING → READY_FOR_PICKUP → RELEASED. Only one step forward at a time; no skipping, no going back.
+- **Order of stages:** RECEIVED → WASHING → DRYING → IRONING → READY_FOR_PICKUP → RELEASED. Update Status shows a dropdown of the later stages, so an order can skip stages it doesn't need (ironing only: RECEIVED → IRONING → READY_FOR_PICKUP). No going back. Use `OrderStatus.nextStages()` for the choices and `new OrderService().updateStatus(orderId, next)` to save.
 - Each step writes **both** `orders.laundry_status` **and** a new history row (`status`, `changed_by = SessionContext.getCurrentUserId()`), in **one** `TransactionHelper.inTransaction(...)`.
 - Lock the order row first (`SELECT laundry_status FROM orders WHERE id = ? FOR UPDATE`) so two clicks can't advance it twice.
 - **RELEASED:** don't write it yourself. Call Ken's existing `new OrderService().releaseOrder(orderId)`. It checks *Ready for Pickup + fully paid* and records the history.
-- **CANCELLED** and **RELEASED** orders can't be advanced.
+- **Stages per service:** each service has `needs_washing / needs_drying / needs_ironing` (set in Services & Prices). Update Status pre-selects the next stage the order's services need and warns before skipping one.
+- **Undo Status** fixes a wrong pick: `new OrderService().undoLastStatus(orderId)` moves the order back one change and saves a history row with `is_undo = 1`. Owners can always undo; staff only within 10 minutes. An undo can't be undone.
+- **CANCELLED** and **RELEASED** orders can't be updated.
 
 ## C4. Code template (copy and rename)
 
