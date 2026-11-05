@@ -48,7 +48,7 @@ Each member has **their own local database**. Never connect to someone else's.
 
 | # | File | What it does |
 |---|---|---|
-| 1 | `schema.sql` | Creates the `laundrylink` database and all 8 tables |
+| 1 | `schema.sql` | Creates the `laundrylink` database, all 8 tables, and `v_order_balances` view |
 | 2 | `create-app-user.sql` | Creates the app's login. **First change `change-me` on line 8 to your own password.** |
 | 3 | `sample-data.sql` | Optional demo services and customers. Run it **after** registering your shop in the app. |
 
@@ -71,10 +71,10 @@ db.password=YOUR-PASSWORD-HERE
 
 1. In NetBeans, right-click **LaundryLink → Clean and Build**.
 2. Press **F6** (Run Project).
-3. First time only: **Staff / Owner Login** opens **Owner Setup**. Create your local owner account (any name, e.g. your own).
+3. First time only: **Staff / Owner Login** opens **Register Your Shop**. Create the shop and its owner account.
 4. Log in. You should see the **Dashboard**.
 
-**Optional demo orders** (to see the Dashboard filled in): after step 3, run `database/demo-orders.sql` in Workbench. To remove them later, run the two `DELETE` lines at the bottom of that file.
+**Optional demo records:** after registering the first shop, run `database/sample-data.sql` in Workbench to add demonstration services and customers.
 
 ## A6. Something's wrong?
 
@@ -96,7 +96,7 @@ db.password=YOUR-PASSWORD-HERE
 ```
 LaundryLink/
 ├── config/                         database.properties (yours, not in Git) + .example
-├── database/                       schema.sql, create-app-user.sql, sample-data.sql, demo-orders.sql, add-*.sql, DATABASE_CHANGES.md
+├── database/                       schema.sql, create-app-user.sql, sample-data.sql, add-*.sql, DATABASE_CHANGES.md
 ├── lib/                            MySQL driver
 ├── LaundryLink_ERD.md              Every table, column and relationship
 ├── fixthiserd/                     ERD picture (.png / .svg / .drawio)

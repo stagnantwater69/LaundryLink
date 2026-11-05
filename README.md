@@ -1,112 +1,210 @@
-# LaundryLink — Setup Guide
+# LaundryLink
 
-From `git clone` to a running app. Do the steps in order; each one only needs to be done once.
+**A Java desktop application for managing day-to-day laundry shop operations in one database-backed workflow.**
 
----
+![Java](https://img.shields.io/badge/Java-8-ED8B00?style=flat&logo=openjdk&logoColor=white)
+![JavaFX](https://img.shields.io/badge/UI-JavaFX-1F6FEB?style=flat)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=flat&logo=mysql&logoColor=white)
+![Build](https://img.shields.io/badge/Build-Ant-A81C7D?style=flat&logo=apacheant&logoColor=white)
 
-## 1. Install the tools
+LaundryLink replaces fragmented notebooks and manual calculations with a shop-scoped system for customers, service pricing, laundry orders, processing stages, cash payments, balances, and daily monitoring. Owners manage their shop configuration and staff accounts; authorized staff use the same operational records without receiving owner-only permissions.
 
-| Tool | Version | Notes |
-|---|---|---|
-| **JDK 8 with JavaFX** | 8 (1.8) | Use **Oracle JDK 8**, **Liberica JDK 8 Full**, or **Azul Zulu 8 JDK FX**. A plain OpenJDK 8 has **no JavaFX** and the project won't build. |
-| **Apache NetBeans** | **8.2** | The project is a NetBeans 8.2 JavaFX (Ant) project. |
-| **MySQL Community Server** | 8.0 | Write down the **root** password you choose during install. |
-| **MySQL Workbench** | 8.0 | Used to run the database scripts. |
-| **Git** | any | To download the project. |
+This is a collaborative four-person Java NC III training project. My work focused on database setup and migrations, manual user acceptance testing, and coordinating the AI-assisted implementation of the **Services & Prices** module. The complete application was not developed by one person.
 
-The MySQL driver is already in the project (`lib/`). You don't need to download it.
+[Features](#core-capabilities) · [Architecture](#application-architecture) · [Database](#database-design) · [Setup](SETUP_GUIDE.md) · [ERD](erd.drawio.png) · [Team guide](TEAM_GUIDE.md)
 
----
+## Problem and purpose
 
-## 2. Download the project
+Small laundry shops often track customer information, service prices, orders, processing stages, payments, and outstanding balances in separate handwritten records. That approach makes incorrect charges, lost order context, and unclear balances more likely.
 
-Open **Git Bash** in your NetBeans projects folder (usually `Documents/NetBeansProjects`) and run:
+LaundryLink centralizes those records and preserves the operational history needed to answer practical questions: What did the customer order? Which price was charged? What stage is the laundry in? How much has been paid? Can the order be released?
 
-```
-git clone https://github.com/stagnantwater69/LaundryLink.git
-```
+## Core capabilities
 
-This creates a `LaundryLink` folder.
-
----
-
-## 3. Open it in NetBeans
-
-1. Start **NetBeans 8.2**.
-2. **File → Open Project…** → select the `LaundryLink` folder → **Open Project**.
-3. Check the Java version: **Tools → Java Platforms** must list a **JDK 1.8** with JavaFX. If NetBeans shows a "missing platform" or "resolve problems" message, right-click the project → **Resolve Project Problems…** and pick your JDK 8.
-
----
-
-## 4. Create the database
-
-1. Make sure MySQL is running: open Windows **Services**, find **MySQL80**, and click **Start** if it's stopped.
-2. Open **MySQL Workbench** and connect to **Local instance** as **root**.
-3. Run the 3 scripts in the project's `database` folder **in this order**. For each one: **File → Open SQL Script…** → choose the file → click the ⚡ **Execute** button (the plain lightning bolt that runs the whole script, *not* the one with the cursor).
-
-| Order | Script | What it does |
-|---|---|---|
-| 1 | `schema.sql` | Creates the `laundrylink` database and its tables |
-| 2 | `create-app-user.sql` | Creates the login the app uses. **Before executing, replace `change-me` (line 8) with a password of your own.** Remember it for step 5. |
-| 3 | `sample-data.sql` | Adds sample laundry services and customers |
-
-To check it worked: in Workbench's **Schemas** panel, right-click → **Refresh All**. You should see a `laundrylink` database with 7 tables.
-
----
-
-## 5. Connect the app to your database
-
-1. Open the project's `config` folder.
-2. Copy `database.properties.example` and rename the copy to **`database.properties`** (same folder).
-3. Open `database.properties` and set the password from step 4:
-
-```properties
-db.url=jdbc:mysql://localhost:3306/laundrylink
-db.user=laundrylink_app
-db.password=YOUR-PASSWORD-FROM-STEP-4
-```
-
-`database.properties` is ignored by Git, so your password is never uploaded. **Don't put a real password in the `.example` file.**
-
----
-
-## 6. Run the app
-
-1. In NetBeans, right-click **LaundryLink → Clean and Build**. Wait for **BUILD SUCCESSFUL** at the bottom.
-2. Press **F6** (or the green ▶ **Run Project** button).
-3. The **Welcome** screen opens.
-
-### First run: create the owner account
-1. Click **Staff / Owner Login**.
-2. Your database has no accounts yet, so **Owner Setup** opens. Enter a first name, middle name (optional), last name, username, and a password (at least 8 characters). Click **Create Owner Account**.
-3. Log in with that username and password. The **Dashboard** opens.
-
-This owner account exists only in *your* local database. To test as a staff member, go to the **Staff Accounts** tab and create one.
-
-From now on, just press **F6** to run.
-
----
-
-## 7. Troubleshooting
-
-| Problem | Fix |
+| Module | Implemented behavior |
 |---|---|
-| "Could not reach the LaundryLink database" | MySQL isn't running → start **MySQL80** in Windows Services. |
-| "Access denied for user 'laundrylink_app'" | The password in `config/database.properties` doesn't match the one you used in `create-app-user.sql`. Make them the same. |
-| "Unknown database 'laundrylink'" or "Table … doesn't exist" | Step 4 wasn't completed. Run `schema.sql` again. |
-| Build errors mentioning `javafx` | Your JDK doesn't include JavaFX. Install one from step 1 and select it in **Tools → Java Platforms**. |
-| "Unable to delete file … dist" when building | The app is still running. Close its window and build again. |
-| Old screens appear after pulling new code | Do **Clean and Build**, then run. |
-| Forgot the owner password (local test database, no orders yet) | In Workbench (as root): `DELETE FROM laundrylink.users WHERE id > 0;` then run the app again to repeat Owner Setup. *This removes all accounts in your local database, and only works while no orders exist.* |
+| **Account and shop management** | Register a shop and owner, authenticate users, update profiles, create/deactivate staff accounts, and enforce owner/staff permissions. |
+| **Customer management** | Add, search, update, and conditionally delete customer records; inspect each customer's order history. |
+| **Services and prices** | Create and update services, choose per-kilogram or per-piece pricing, activate/deactivate availability, and configure required washing, drying, and ironing stages. |
+| **Laundry orders** | Select a customer, add one or more services, enter weight or piece quantity, calculate totals, search orders, and preserve service-name, pricing-unit, and price snapshots. |
+| **Order processing** | Track Received, Washing, Drying, Ironing, Ready for Pickup, Released, or Cancelled states; retain status history and support controlled status corrections. |
+| **Payments** | Record partial or full cash payments, calculate change, track remaining balances, and prevent overpayment. |
+| **Dashboard and monitoring** | Review daily orders, collections, released/ready counts, outstanding balances, recent orders, and current workflow totals. |
 
----
+## Application architecture
 
-## 8. Getting the latest code later
+LaundryLink follows a layered Java desktop design rather than placing database logic directly in JavaFX screens.
 
+```mermaid
+flowchart LR
+    UI[FXML views + CSS]
+    C[JavaFX controllers]
+    S["Service layer<br/>validation and transactions"]
+    D["DAO layer<br/>SQL and row mapping"]
+    J[JDBC + MySQL Connector/J]
+    DB[("MySQL 8<br/>8 tables + 1 view")]
+
+    UI <--> C
+    C --> S
+    S --> D
+    D --> J
+    J --> DB
 ```
-git pull
+
+| Layer | Location | Responsibility |
+|---|---|---|
+| Views | `src/com/laundrylink/view/`, `css/`, `images/` | FXML screen structure, visual styling, and interface assets |
+| Controllers | `src/com/laundrylink/controller/` | JavaFX events, form state, table rendering, navigation, and role-aware controls |
+| Services | `src/com/laundrylink/service/` | Validation, business rules, transaction boundaries, and module coordination |
+| DAOs | `src/com/laundrylink/dao/` | Prepared SQL statements, persistence operations, and database result mapping |
+| Models | `src/com/laundrylink/model/` | Users, customers, services, orders, payments, statuses, and view-specific records |
+| Configuration/utilities | `src/com/laundrylink/config/`, `util/` | Database connections, sessions, navigation, dialogs, background work, and formatting |
+
+## Important workflows
+
+### Service configuration to historical order price
+
+1. The owner defines a service name, pricing unit, current price, availability, and required stages.
+2. Active services become available during order entry.
+3. When an order is saved, `order_items` copies the service name, pricing unit, and unit price.
+4. Later service-price changes affect new orders only; existing orders retain the price originally charged.
+
+### Laundry processing and release
+
+1. A new order starts as `RECEIVED` and receives an initial status-history record.
+2. Staff move it through the configured Washing, Drying, and/or Ironing stages.
+3. The order becomes `READY_FOR_PICKUP` when processing is complete.
+4. Release requires the correct workflow state and a fully settled balance; the service layer records the transition.
+
+### Cash payment and balance monitoring
+
+1. The payment screen reads the order total and previous payments.
+2. Staff record the amount applied to the order and the cash received.
+3. The application validates positive values, sufficient cash, and a payment no greater than the remaining balance.
+4. The `v_order_balances` view derives amount paid, remaining balance, and `UNPAID`, `PARTIALLY_PAID`, or `PAID` status.
+
+## Database design
+
+The current [`database/schema.sql`](database/schema.sql) is the source of truth. It creates **8 tables and 1 view**:
+
+| Object | Type | Purpose |
+|---|---|---|
+| `shops` | Table | Registered laundry shops and tenant boundary |
+| `users` | Table | Owner (`ADMIN`) and staff accounts |
+| `customers` | Table | Shop customer records; customers do not have system accounts |
+| `services` | Table | Service catalog, pricing, availability, and required stages |
+| `orders` | Table | Order header, customer, creator, total, dates, and current status |
+| `order_items` | Table | Services and historical pricing snapshots attached to an order |
+| `payments` | Table | Partial or full cash payments and receiving user |
+| `order_status_history` | Table | Timestamped status transitions and undo markers |
+| `v_order_balances` | View | Derived amount paid, outstanding balance, and payment status per order |
+
+The previous README's “7 tables” statement was outdated. The eighth table, `shops`, was introduced for multi-shop data isolation by `add-shops.sql` and is already included in the current full schema. `v_order_balances` is a database view, not a ninth table.
+
+<details>
+<summary><strong>View the entity-relationship diagram</strong></summary>
+
+![LaundryLink entity-relationship diagram](erd.drawio.png)
+
+The editable source is available in [`ERD.drawio`](ERD.drawio).
+</details>
+
+## Technology stack
+
+| Category | Technology |
+|---|---|
+| Language and runtime | Java 8 |
+| Desktop UI | JavaFX 8, FXML, CSS |
+| Database | MySQL 8.0, InnoDB |
+| Data access | JDBC, MySQL Connector/J 8.4.0, prepared statements |
+| Build tooling | Apache Ant, NetBeans project metadata |
+| Security | Salted password hashing through Java's `PBKDF2WithHmacSHA256`; role- and shop-scoped application rules |
+| Collaboration | Git, GitHub, feature branches, pull requests |
+
+## Project structure
+
+```text
+src/com/laundrylink/
+├── controller/     JavaFX screen controllers
+├── service/        validation, workflows, and transactions
+├── dao/            database access
+├── model/          domain and presentation models
+├── view/           FXML layouts
+├── css/            screen styling
+├── config/         connection configuration
+├── util/           shared UI and session helpers
+└── images/         interface assets
+
+database/           full schema, migrations, sample data, and DB notes
+docs/               module-level technical documentation
+nbproject/          NetBeans/Ant project configuration
+lib/                MySQL Connector/J
 ```
 
-Then in NetBeans: **Clean and Build** → **F6**.
+## Setup and installation
 
-If someone changes the database structure, they'll share an update script. Run it in Workbench the same way as in step 4.
+Follow the tested, step-by-step instructions in [`SETUP_GUIDE.md`](SETUP_GUIDE.md). In summary, the project requires:
+
+- JDK 8 with JavaFX included;
+- Apache NetBeans 8.2 or a compatible Ant workflow;
+- MySQL Server and Workbench 8.0; and
+- a local `config/database.properties` copied from the committed example.
+
+For a fresh database, execute:
+
+1. `database/schema.sql`
+2. `database/create-app-user.sql` after replacing the placeholder password
+3. optionally, `database/sample-data.sql` after registering the first shop
+
+Existing installations should follow [`database/DATABASE_CHANGES.md`](database/DATABASE_CHANGES.md) rather than rerunning migrations blindly.
+
+No real database password is committed. `config/database.properties` is intentionally ignored by Git.
+
+## Testing and validation
+
+- Manual user acceptance testing was performed across owner and staff journeys, including authentication, shop/staff setup, customer and service management, order creation, status progression, payments, release rules, and dashboard updates.
+- Database migrations were applied and checked against the final schema during team integration.
+- An order-status usability issue was identified during UAT; a teammate implemented the interface correction, and the corrected behavior was verified afterward.
+- Module-specific manual checks are documented in [`docs/service-price-management.md`](docs/service-price-management.md) and [`TEAM_GUIDE.md`](TEAM_GUIDE.md).
+- A clean Ant build completed successfully and compiled all 60 Java source files into the application JAR.
+
+The repository does **not** contain an automated unit, integration, or UI test suite, coverage report, or formal UAT result file. No automated coverage percentage is claimed.
+
+## Collaboration and attribution
+
+| Contributor | Primary project responsibility |
+|---|---|
+| **Ken Romanggar** | Lead development; accounts, shop registration, laundry orders, payments, dashboard, and shared code |
+| **Edmar Mabajen** | Interface design leadership and Customer Management |
+| **Reniel Galang** | Business-plan leadership and Services & Prices module coordination |
+| **John Ray Fullece** | Documentation leadership and Order Status Tracking |
+
+### My contribution — Reniel Galang
+
+- Executed local MySQL setup and schema migrations during integration.
+- Coordinated AI-assisted implementation of the Services & Prices module and reviewed it against the agreed validation, pricing-unit, availability, stage, and owner-permission requirements.
+- Conducted manual UAT across the integrated desktop application.
+- Identified an order-status usability issue and verified the correction implemented by a teammate.
+- Participated in Git/GitHub collaboration, documentation, and project presentation work.
+
+AI assistance supported parts of the development workflow; requirements, integration decisions, manual verification, and final team ownership remained human responsibilities. Commit history and merged feature branches provide additional implementation attribution.
+
+## Known limitations
+
+- The current product is a desktop application backed by a directly configured MySQL database; it is not a hosted multi-device web service.
+- Payments are cash-only, with no payment-gateway integration.
+- Customers are managed records, not system users; there is no customer-facing portal or notification service.
+- Runtime application screenshots are not currently committed, although the repository includes the ERD and UI assets.
+- Quality assurance is manual because no automated test suite is included.
+
+## Documentation
+
+- [Complete setup guide](SETUP_GUIDE.md)
+- [Database migration guide](database/DATABASE_CHANGES.md)
+- [Service and Price Management specification](docs/service-price-management.md)
+- [Team architecture and module guide](TEAM_GUIDE.md)
+- [Entity-relationship diagram](erd.drawio.png)
+
+## Recommended portfolio captures
+
+For a stronger visual walkthrough, capture the real running application at the Welcome/Login screen, Dashboard, Customers, Services & Prices, New Order, Order Status, Payments, and Staff Accounts. These screenshots should use demonstration data and must not expose real customer information or database credentials.
