@@ -42,15 +42,16 @@ This creates a `LaundryLink` folder.
 
 1. Make sure MySQL is running: open Windows **Services**, find **MySQL80**, and click **Start** if it's stopped.
 2. Open **MySQL Workbench** and connect to **Local instance** as **root**.
-3. Run the 3 scripts in the project's `database` folder **in this order**. For each one: **File → Open SQL Script…** → choose the file → click the ⚡ **Execute** button (the plain lightning bolt that runs the whole script, *not* the one with the cursor).
+3. Run the 2 required scripts in the project's `database` folder **in this order**. For each one: **File → Open SQL Script…** → choose the file → click the ⚡ **Execute** button (the plain lightning bolt that runs the whole script, *not* the one with the cursor).
 
 | Order | Script | What it does |
 |---|---|---|
 | 1 | `schema.sql` | Creates the `laundrylink` database and its tables |
 | 2 | `create-app-user.sql` | Creates the login the app uses. **Before executing, replace `change-me` (line 8) with a password of your own.** Remember it for step 5. |
-| 3 | `sample-data.sql` | Adds sample laundry services and customers |
 
-To check it worked: in Workbench's **Schemas** panel, right-click → **Refresh All**. You should see a `laundrylink` database with 7 tables.
+Do **not** run `sample-data.sql` yet. Its demo records need a registered shop, which you will create during the first run in step 6.
+
+To check it worked: in Workbench's **Schemas** panel, right-click → **Refresh All**. You should see a `laundrylink` database with **8 tables** and the **`v_order_balances` view**.
 
 ---
 
@@ -76,12 +77,16 @@ db.password=YOUR-PASSWORD-FROM-STEP-4
 2. Press **F6** (or the green ▶ **Run Project** button).
 3. The **Welcome** screen opens.
 
-### First run: create the owner account
+### First run: register the shop and owner
 1. Click **Staff / Owner Login**.
-2. Your database has no accounts yet, so **Owner Setup** opens. Enter a first name, middle name (optional), last name, username, and a password (at least 8 characters). Click **Create Owner Account**.
-3. Log in with that username and password. The **Dashboard** opens.
+2. Because the database has no shop yet, **Register Your Shop** opens. Enter the shop name, owner name, username, and a password (at least 8 characters), then click **Register Shop**.
+3. The Login screen opens with the username filled in. Enter the password and log in; the **Dashboard** opens.
 
 This owner account exists only in *your* local database. To test as a staff member, go to the **Staff Accounts** tab and create one.
+
+### Optional: load demonstration data
+
+After registering the first shop, open MySQL Workbench as root and run `database/sample-data.sql`. It adds demonstration services and customers to that shop. Refresh the application screens afterward to see the new records.
 
 From now on, just press **F6** to run.
 
@@ -97,7 +102,7 @@ From now on, just press **F6** to run.
 | Build errors mentioning `javafx` | Your JDK doesn't include JavaFX. Install one from step 1 and select it in **Tools → Java Platforms**. |
 | "Unable to delete file … dist" when building | The app is still running. Close its window and build again. |
 | Old screens appear after pulling new code | Do **Clean and Build**, then run. |
-| Forgot the owner password (local test database, no orders yet) | In Workbench (as root): `DELETE FROM laundrylink.users WHERE id > 0;` then run the app again to repeat Owner Setup. *This removes all accounts in your local database, and only works while no orders exist.* |
+| Forgot the owner password in a disposable local test database | Back up anything you need, then follow the “start fresh” procedure in `database/DATABASE_CHANGES.md`: drop and recreate the database, then register the shop again. LaundryLink currently has no password-recovery screen. |
 
 ---
 
